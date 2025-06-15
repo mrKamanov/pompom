@@ -1,68 +1,66 @@
-/* styles.css */
 
-/* Главный контейнер всплывающего окна */
 .pompom-popup-container {
   position: fixed;
   top: 20px;
   right: 20px;
   width: 400px;
-  background-color: #ffffff; /* Чистый белый фон */
-  border: 1px solid #e0e0e0; /* Легкая серая рамка */
+  background-color: #ffffff; 
+  border: 1px solid #e0e0e0; 
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); /* Мягкая тень */
-  z-index: 2147483647; /* Максимальный z-index для обеспечения видимости */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); 
+  z-index: 2147483647; 
   opacity: 0.9;
   transition: opacity 0.2s ease-in-out;
   display: flex;
   flex-direction: column;
   font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-  color: #333; /* Основной цвет текста - темно-серый */
-  overflow: hidden; /* Обрезка содержимого, которое выходит за границы */
+  color: #333; 
+  overflow: hidden; 
 }
 
-/* Заголовок окна */
+
 .pompom-popup-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 8px 15px;
-  background-color: #f8f8f8; /* Очень легкий серый фон */
-  border-bottom: 1px solid #e0e0e0; /* Легкая серая граница снизу */
-  border-radius: 12px 12px 0 0; /* Закругленные углы сверху */
-  cursor: move; /* Курсор для перетаскивания */
-  user-select: none; /* Запрет выделения текста при перетаскивании */
-  flex-shrink: 0; /* Запрет сжатия заголовка */
+  background-color: #f8f8f8; 
+  border-bottom: 1px solid #e0e0e0; 
+  border-radius: 12px 12px 0 0; 
+  cursor: move; 
+  user-select: none; 
+  flex-shrink: 0; 
 }
 
-/* Заголовок текста внутри окна (например, "Результат обработки") */
+
 .pompom-popup-title {
   margin: 0;
   font-size: 16px;
-  font-weight: 600; /* Более жирный шрифт */
+  font-weight: 600; 
   color: #555;
-  flex-grow: 1; /* Позволяет заголовку занимать доступное пространство */
+  flex-grow: 1; 
 }
 
-/* Контейнер для кнопок управления */
+
 .pompom-popup-controls {
   display: flex;
   align-items: center;
-  gap: 8px; /* Отступ между элементами управления */
+  gap: 8px; 
 }
 
-/* Управление прозрачностью */
+
 .pompom-opacity-control {
   display: flex;
   align-items: center;
-  gap: 5px; /* Отступ между ползунком и другими элементами */
-  margin-right: 5px; /* Небольшой отступ от кнопок */
+  gap: 5px; 
+  margin-right: 5px; 
 }
 
 .pompom-opacity-slider {
-  width: 70px; /* Ширина ползунка */
+  width: 70px; 
   height: 10px;
-  -webkit-appearance: none; /* Убираем дефолтные стили WebKit */
-  background: #ddd; /* Фон ползунка */
+  -webkit-appearance: none; 
+  background: #ddd; 
   border-radius: 2px;
   outline: none;
   opacity: 0.8;
@@ -76,7 +74,7 @@
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: #6a6a6a; /* Цвет ползунка */
+  background: #6a6a6a; 
   cursor: pointer;
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
@@ -90,70 +88,70 @@
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 
-/* Общие стили для кнопок в заголовке */
+
 .pompom-header-button {
-  background: none; /* Убираем фон */
-  border: none; /* Убираем рамку */
+  background: none; 
+  border: none; 
   cursor: pointer;
   padding: 6px;
-  color: #666; /* Нейтральный серый цвет иконки по умолчанию */
+  color: #666; 
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px; /* Фиксированная ширина */
-  height: 32px; /* Фиксированная высота */
-  border-radius: 6px; /* Легкое скругление */
-  outline: none; /* Убираем стандартную обводку фокуса */
-  flex-shrink: 0; /* Запрет сжатия */
-  position: relative; /* Для лучшего позиционирования SVG */
+  width: 32px; 
+  height: 32px; 
+  border-radius: 6px; 
+  outline: none; 
+  flex-shrink: 0; 
+  position: relative; 
 }
 
 .pompom-header-button:hover {
-  color: #333; /* Чуть темнее при наведении */
-  background-color: rgba(0, 0, 0, 0.08); /* Легкий серый фон при наведении */
+  color: #333; 
+  background-color: rgba(0, 0, 0, 0.08); 
 }
 
 .pompom-header-button:active {
-  background-color: rgba(0, 0, 0, 0.15); /* Чуть темнее фон при нажатии */
-  transform: translateY(1px); /* Эффект "нажатия" */
+  background-color: rgba(0, 0, 0, 0.15); 
+  transform: translateY(1px); 
 }
 
-/* Стили для SVG-иконок внутри кнопок */
+
 .pompom-header-button svg {
   width: 20px;
   height: 20px;
-  stroke-width: 2; /* Толщина обводки SVG */
+  stroke-width: 2; 
 }
 
-/* Состояние disabled для кнопок */
+
 .pompom-header-button:disabled {
     cursor: not-allowed;
-    opacity: 0.5; /* Уменьшаем прозрачность */
-    background-color: transparent !important; /* Убедимся, что нет фона */
-    color: #999; /* Серый цвет иконки */
+    opacity: 0.5; 
+    background-color: transparent !important; 
+    color: #999; 
 }
 
-/* Класс для кнопки копирования после успешного копирования */
+
 .pompom-copy-button.copied {
-  color: #28a745; /* Зеленый цвет */
+  color: #28a745; 
 }
 
-/* Основное содержимое окна */
+
 .pompom-popup-content {
   padding: 15px;
-  max-height: 400px; /* Максимальная высота для скролла */
-  overflow-y: auto; /* Вертикальный скролл при необходимости */
+  max-height: 400px; 
+  overflow-y: auto; 
   font-size: 14px;
   line-height: 1.6;
-  color: #444; /* Цвет текста содержимого */
-  flex-grow: 1; /* Позволяет контенту занимать оставшееся пространство */
+  color: #444; 
+  flex-grow: 1; 
 }
 
-/* Стили для параграфов внутри содержимого */
+
 .pompom-popup-content p {
   margin-bottom: 1em;
-  text-align: justify; /* Выравнивание текста по ширине */
+  text-align: justify; 
 }
 
 .pompom-popup-content p:last-child {
@@ -161,8 +159,6 @@
 }
 
 
-/* ==================================== */
-/* Стили для скроллбара (только WebKit) */
 .pompom-popup-content::-webkit-scrollbar {
   width: 8px;
 }
@@ -173,26 +169,23 @@
 }
 
 .pompom-popup-content::-webkit-scrollbar-thumb {
-  background: #a0a0a0; /* Серый цвет ползунка скроллбара */
+  background: #a0a0a0; 
   border-radius: 4px;
 }
 
 .pompom-popup-content::-webkit-scrollbar-thumb:hover {
-  background: #777; /* Темнее серый при наведении */
+  background: #777; 
 }
 
-/* ==================================== */
-/* Стили для Highlight.js (если используете) */
-/* Базовая тема - можно заменить на другую из 'highlight.js/styles/' */
-/* Note: Highlight.js themes might be loaded separately, but including a base here is fine for now. */
+
 .hljs {
   display: block;
   overflow-x: auto;
   padding: 1em;
-  background: #f3f3f3; /* Легкий фон для подсветки */
+  background: #f3f3f3; 
   color: #444;
-  border-radius: 8px; /* Скругление углов для блоков кода */
-  margin: 1em 0; /* Отступы вокруг блоков кода */
+  border-radius: 8px; 
+  margin: 1em 0; 
 }
 .hljs-comment,
 .hljs-quote {

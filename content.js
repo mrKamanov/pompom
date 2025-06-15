@@ -1,7 +1,24 @@
-// content.js
+/**
+ * content.js - Основной скрипт расширения PomPom
+ * 
+ * Этот файл отвечает за:
+ * 1. Создание и управление всплывающим окном с результатами обработки текста
+ * 2. Форматирование ответа от API с поддержкой подсветки синтаксиса кода
+ * 3. Управление прозрачностью и перетаскиванием окна
+ * 4. Обработку копирования текста в буфер обмена
+ * 5. Управление функцией автоматической печати текста
+ * 
+ * Основные компоненты:
+ * - Всплывающее окно с заголовком, контролами и областью контента
+ * - Слайдер прозрачности
+ * - Кнопки копирования, печати и закрытия
+ * - Интеграция с highlight.js для подсветки кода
+ * - Система состояний для функции печати
+ * 
+ * @author Сергей Каманов
+ * @version 1.0
+ */
 
-// Вспомогательная функция для экранирования HTML-спецсимволов
-// Эта функция используется только для обычного текста, не для содержимого, передаваемого в Highlight.js
 function escapeHtml(unsafe) {
     return unsafe
         .replace(/&/g, "&amp;")
@@ -11,7 +28,7 @@ function escapeHtml(unsafe) {
         .replace(/'/g, "&#039;");
 }
 
-// Новая функция для форматирования ответа API
+
 function formatApiResponse(rawText) {
     const lines = rawText.split('\n');
     let html = '';
@@ -23,11 +40,9 @@ function formatApiResponse(rawText) {
         const line = lines[i];
         if (line.startsWith('```')) {
             if (inCodeBlock) {
-                // Конец блока кода
+               
                 const codeContent = currentCodeBlock.join('\n');
-                // Highlight.js сам занимается экранированием, поэтому не нужно вызывать escapeHtml для codeContent.
-
-                // Если есть Highlight.js, используем его
+                
                 if (window.hljs) {
                     try {
                         const highlighted = codeLanguage ?
@@ -36,37 +51,36 @@ function formatApiResponse(rawText) {
                         html += `<pre><code class="hljs ${codeLanguage}">${highlighted}</code></pre>`;
                     } catch (e) {
                         console.warn('Highlight.js failed, rendering as plain text:', e);
-                        html += `<pre><code>${escapeHtml(codeContent)}</code></pre>`; // Fallback, используем escapeHtml здесь
+                        html += `<pre><code>${escapeHtml(codeContent)}</code></pre>`; 
                     }
                 } else {
-                    html += `<pre><code>${escapeHtml(codeContent)}</code></pre>`; // Если Highlight.js нет, используем escapeHtml
+                    html += `<pre><code>${escapeHtml(codeContent)}</code></pre>`; 
                 }
                 inCodeBlock = false;
                 currentCodeBlock = [];
                 codeLanguage = '';
             } else {
-                // Начало блока кода
+                
                 const parts = line.split('`');
-                codeLanguage = parts.length > 3 ? parts[3].trim() : ''; // Get language if specified
+                codeLanguage = parts.length > 3 ? parts[3].trim() : ''; 
                 inCodeBlock = true;
             }
         } else if (inCodeBlock) {
             currentCodeBlock.push(line);
         } else {
-            // Обычный текст, оборачиваем в параграф и экранируем
-            // Разделяем на параграфы, если есть пустые строки
+            
             if (line.trim() === '') {
-                html += '<br>'; // Пустые строки как <br>
+                html += '<br>'; 
             } else {
                 html += `<p>${escapeHtml(line)}</p>`;
             }
         }
     }
 
-    // Если блок кода не был закрыт (например, обрыв текста)
+    
     if (inCodeBlock) {
         const codeContent = currentCodeBlock.join('\n');
-        // Highlight.js сам занимается экранированием, поэтому не нужно вызывать escapeHtml для codeContent.
+        
         if (window.hljs) {
             try {
                 const highlighted = codeLanguage ?
@@ -75,30 +89,28 @@ function formatApiResponse(rawText) {
                 html += `<pre><code class="hljs ${codeLanguage}">${highlighted}</code></pre>`;
             } catch (e) {
                 console.warn('Highlight.js failed for unclosed block, rendering as plain text:', e);
-                html += `<pre><code>${escapeHtml(codeContent)}</code></pre>`; // Fallback, используем escapeHtml здесь
+                html += `<pre><code>${escapeHtml(codeContent)}</code></pre>`; 
             }
         } else {
-            html += `<pre><code>${escapeHtml(codeContent)}</code></pre>`; // Если Highlight.js нет, используем escapeHtml
+            html += `<pre><code>${escapeHtml(codeContent)}</code></pre>`; 
         }
     }
     return html;
 }
 
 
-// Новая функция для удаления маркеров блоков кода
+
 function cleanCodeBlockMarkers(text) {
-    // Удаляем открывающие маркеры с опциональным языком (например, ```sql)
-    // и закрывающие маркеры (```)
+    
     return text.replace(/^```(?:\w+)?\n?/gm, '').replace(/^```\n?/gm, '');
 }
 
 
-// =========================================================
-// Функции для создания и управления окном
+
 
 function createPopup() {
     const popup = document.createElement('div');
-    popup.classList.add('pompom-popup-container'); // Новое имя класса
+    popup.classList.add('pompom-popup-container'); 
 
     popup.innerHTML = `
       <div class="pompom-popup-header">
@@ -135,7 +147,7 @@ function createPopup() {
 }
 
 function makeDraggable(element) {
-    const header = element.querySelector('.pompom-popup-header'); // Новое имя класса
+    const header = element.querySelector('.pompom-popup-header'); 
     if (!header) return;
 
     let pos1 = 0,
@@ -148,23 +160,23 @@ function makeDraggable(element) {
     function dragMouseDown(e) {
         e = e || window.event;
         e.preventDefault();
-        // get the mouse cursor position at startup:
+        
         pos3 = e.clientX;
         pos4 = e.clientY;
         document.onmouseup = closeDragElement;
-        // call a function whenever the cursor moves:
+        
         document.onmousemove = elementDrag;
     }
 
     function elementDrag(e) {
         e = e || window.event;
         e.preventDefault();
-        // calculate the new cursor position:
+        
         pos1 = pos3 - e.clientX;
         pos2 = pos4 - e.clientY;
         pos3 = e.clientX;
         pos4 = e.clientY;
-        // set the element's new position:
+        
         element.style.top = (element.offsetTop - pos2) + "px";
         element.style.left = (element.offsetLeft - pos1) + "px";
     }
@@ -177,16 +189,16 @@ function makeDraggable(element) {
 }
 
 function setupOpacityControl(popup) {
-    const slider = popup.querySelector('.pompom-opacity-slider'); // Новое имя класса
+    const slider = popup.querySelector('.pompom-opacity-slider'); 
     if (slider) {
-        // Загружаем сохраненное значение прозрачности
+        
         chrome.storage.sync.get(['pompomOpacity'], (result) => {
             const savedOpacity = result.pompomOpacity;
-            if (typeof savedOpacity === 'number') { // Убедимся, что это число
+            if (typeof savedOpacity === 'number') { 
                 popup.style.opacity = savedOpacity;
                 slider.value = savedOpacity;
             } else {
-                // Если нет сохраненного значения, используем значение по умолчанию из HTML (0.9)
+                
                 popup.style.opacity = slider.value;
             }
         });
@@ -194,18 +206,18 @@ function setupOpacityControl(popup) {
         slider.addEventListener('input', (e) => {
             const newOpacity = parseFloat(e.target.value);
             popup.style.opacity = newOpacity;
-            // Сохраняем новое значение прозрачности
+            
             chrome.storage.sync.set({ pompomOpacity: newOpacity });
         });
 
-        // ДОБАВЛЕННЫЙ ОБРАБОТЧИК ДЛЯ ОСТАНОВКИ ВСПЛЫТИЯ СОБЫТИЯ
+        
         slider.addEventListener('mousedown', (e) => {
-            e.stopPropagation(); // Останавливаем всплытие события mousedown
+            e.stopPropagation(); 
         });
     }
 }
 
-// Внедряем inject.js в контекст страницы
+
 function injectScript(file_path, tag) {
     const node = document.getElementsByTagName(tag)[0];
     const script = document.createElement('script');
@@ -214,17 +226,15 @@ function injectScript(file_path, tag) {
     node.appendChild(script);
 }
 
-// Внедряем inject.js при загрузке content.js
+
 injectScript('inject.js', 'body');
 
 
-// Глобальная переменная для отслеживания состояния печати
-// 'idle', 'typing', 'paused', 'completed', 'error_no_input' (от inject.js)
-// 'waiting_to_start' (добавлено только для UI content.js)
-let currentTypingState = 'idle';
-let lastApiResult = ''; // Для хранения последнего полученного текста API
 
-// Функция для обновления состояния кнопки "Напечатать"
+let currentTypingState = 'idle';
+let lastApiResult = ''; 
+
+
 function updateTypeButton(buttonElement, state) {
     const playIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><path d="M12 6v6l4-2-4-2z"></path></svg>`;
     const pauseIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
@@ -232,7 +242,7 @@ function updateTypeButton(buttonElement, state) {
     const doneIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-8.12"></path><path d="M22 4L12 14.01l-3-3"></path></svg>`;
     const errorIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
 
-    // Добавляем стиль для анимации вращения иконки загрузки
+    
     if (!document.getElementById('pompom-spin-style')) {
         const spinStyle = document.createElement('style');
         spinStyle.id = 'pompom-spin-style';
@@ -240,7 +250,7 @@ function updateTypeButton(buttonElement, state) {
         document.head.appendChild(spinStyle);
     }
 
-    currentTypingState = state; // Обновляем глобальное состояние в content.js
+    currentTypingState = state; 
 
     switch (state) {
         case 'idle':
@@ -251,7 +261,7 @@ function updateTypeButton(buttonElement, state) {
         case 'waiting_to_start':
             buttonElement.innerHTML = loadingIcon;
             buttonElement.title = "Подготовка к печати (5 сек.)... Нажмите еще раз для отмены";
-            buttonElement.disabled = false; // Разрешаем отмену кликом
+            buttonElement.disabled = false;
             break;
         case 'typing':
             buttonElement.innerHTML = pauseIcon;
@@ -276,39 +286,39 @@ function updateTypeButton(buttonElement, state) {
     }
 }
 
-// Переменная для хранения таймаута
+
 let typingStartTimeout = null;
 
-// Слушаем сообщения от background script
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === "showResult") {
         console.log('Получено сообщение showResult:', message);
 
-        // Очищаем результат от маркеров кода для копирования и печати
+        
         lastApiResult = cleanCodeBlockMarkers(message.result);
-        currentTypingState = 'idle'; // Сбрасываем состояние печати
+        currentTypingState = 'idle'; 
 
         const existingPopup = document.querySelector('.pompom-popup-container');
         if (existingPopup) {
             existingPopup.remove();
-            // Также очищаем таймаут, если он был активен при повторном открытии
+            
             if (typingStartTimeout) {
                 clearTimeout(typingStartTimeout);
                 typingStartTimeout = null;
             }
-            window.postMessage({ type: 'POMPOM_RESET_TYPING' }, '*'); // Сброс состояния в inject.js
+            window.postMessage({ type: 'POMPOM_RESET_TYPING' }, '*'); 
         }
 
         const popup = createPopup();
         console.log('Создано новое окно:', popup);
 
         makeDraggable(popup);
-        setupOpacityControl(popup); // Вызов здесь, чтобы применить сохраненную прозрачность
+        setupOpacityControl(popup); 
 
         const closeButton = popup.querySelector('.pompom-popup-close');
         closeButton.addEventListener('click', () => {
             popup.remove();
-            // Очищаем состояние печати при закрытии окна
+            
             if (typingStartTimeout) {
                 clearTimeout(typingStartTimeout);
                 typingStartTimeout = null;
@@ -320,16 +330,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const typeButton = popup.querySelector('.pompom-type-button');
         const content = popup.querySelector('.pompom-popup-content');
 
-        // Используем ОРИГИНАЛЬНЫЙ message.result для отображения с подсветкой синтаксиса
-        // Это важно, чтобы formatApiResponse мог найти блоки кода.
+        
         content.innerHTML = formatApiResponse(message.result);
 
-        // Инициализируем кнопку печати в состоянии 'idle'
+        
         updateTypeButton(typeButton, 'idle');
 
         copyButton.addEventListener('click', async () => {
             try {
-                await navigator.clipboard.writeText(lastApiResult); // Здесь используем очищенный lastApiResult
+                await navigator.clipboard.writeText(lastApiResult); 
                 copyButton.classList.add('copied');
                 setTimeout(() => {
                     copyButton.classList.remove('copied');
@@ -339,48 +348,48 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             }
         });
 
-        // ОБРАБОТЧИК ДЛЯ НОВОЙ КНОПКИ
+        
         typeButton.addEventListener('click', () => {
             if (currentTypingState === 'idle' || currentTypingState === 'paused' || currentTypingState === 'completed') {
-                // Если бездействует, на паузе или завершена, готовим к запуску/продолжению
-                updateTypeButton(typeButton, 'waiting_to_start'); // Показываем, что ждем таймер
+                
+                updateTypeButton(typeButton, 'waiting_to_start'); 
                 console.log('Нажат Type-кнопка. Запуск/Возобновление через 5 секунд...');
 
-                // Очищаем предыдущий таймаут, если он был
+                
                 if (typingStartTimeout) {
                     clearTimeout(typingStartTimeout);
                 }
 
                 typingStartTimeout = setTimeout(() => {
-                    // Проверяем, что состояние не изменилось на 'idle' (отмена)
+                    
                     if (currentTypingState === 'waiting_to_start') {
                         console.log('Таймер 5 секунд истек. Отправка команды START_TYPING.');
                         window.postMessage({
                             type: 'POMPOM_START_TYPING',
-                            text: lastApiResult // Здесь используем очищенный lastApiResult
+                            text: lastApiResult 
                         }, '*');
-                        typingStartTimeout = null; // Сбрасываем ID таймаута
+                        typingStartTimeout = null; 
                     } else {
                         console.log("Typing state changed before timer finished. Aborting command.");
                     }
-                }, 5000); // 5 секунд = 5000 миллисекунд
+                }, 5000); 
             } else if (currentTypingState === 'typing') {
-                // Если печатает, ставим на паузу
+                
                 console.log('Нажат Type-кнопка. Отправка команды PAUSE_TYPING.');
                 window.postMessage({ type: 'POMPOM_PAUSE_TYPING' }, '*');
-                if (typingStartTimeout) { // Отменяем таймер, если он был запущен (для robustness)
+                if (typingStartTimeout) { 
                     clearTimeout(typingStartTimeout);
                     typingStartTimeout = null;
                 }
             } else if (currentTypingState === 'waiting_to_start') {
-                // Если уже ждем таймер, то отменяем ожидание
+                
                 console.log('Отмена ожидания старта печати.');
                 if (typingStartTimeout) {
                     clearTimeout(typingStartTimeout);
                     typingStartTimeout = null;
                 }
-                updateTypeButton(typeButton, 'idle'); // Сбрасываем UI кнопки
-                // Отправляем RESET, чтобы inject.js также знал, что отмена
+                updateTypeButton(typeButton, 'idle'); 
+                
                 window.postMessage({ type: 'POMPOM_RESET_TYPING' }, '*');
             }
         });
@@ -390,15 +399,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 });
 
-// Новый слушатель для получения сообщений о состоянии печати от inject.js
+
 window.addEventListener('message', (event) => {
     if (event.source === window && event.data && event.data.type === 'POMPOM_TYPING_STATE') {
         console.log('Content.js received TYPING_STATE:', event.data.state);
         const typeButton = document.querySelector('.pompom-type-button');
         if (typeButton) {
-            // Если мы получили состояние, которое не является 'waiting_to_start',
-            // то значит, inject.js уже начал/остановил печать, и нам нужно отменить таймер,
-            // если он был активен.
+            
             if (event.data.state !== 'waiting_to_start' && typingStartTimeout) {
                 clearTimeout(typingStartTimeout);
                 typingStartTimeout = null;

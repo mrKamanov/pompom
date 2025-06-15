@@ -1,4 +1,23 @@
-// Создаем пункт контекстного меню
+/**
+ * background.js - Фоновый скрипт расширения PomPom
+ * 
+ * Этот файл отвечает за:
+ * 1. Создание контекстного меню для обработки выделенного текста
+ * 2. Взаимодействие с AI API для обработки текста
+ * 3. Управление настройками расширения
+ * 4. Обработку ошибок и валидацию данных
+ * 
+ * Основные функции:
+ * - Инициализация контекстного меню при установке расширения
+ * - Получение выделенного текста из активной вкладки
+ * - Отправка запросов к AI API с использованием сохраненного ключа
+ * - Обработка ответов от API и их форматирование
+ * - Управление состоянием расширения через chrome.storage
+ * 
+ * @author Сергей Каманов
+ * @version 1.0
+ */
+
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: "processText",
@@ -7,23 +26,23 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
-// Функция для отправки сообщения на вкладку
+
 async function sendMessageToTab(tab, message) {
   try {
     await chrome.tabs.sendMessage(tab.id, message);
   } catch (error) {
     console.log('Ошибка отправки сообщения:', error);
-    // Если content script не загружен, загружаем его
+    
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       files: ['content.js']
     });
-    // Повторяем отправку сообщения
+    
     await chrome.tabs.sendMessage(tab.id, message);
   }
 }
 
-// Функция для получения выделенного текста
+
 async function getSelectedText(tab) {
   try {
     const results = await chrome.scripting.executeScript({
@@ -44,14 +63,14 @@ async function getSelectedText(tab) {
   }
 }
 
-// Обработчик клика по пункту меню
+
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId === "processText") {
     try {
       console.log('Menu clicked, info:', info);
       console.log('Current tab:', tab);
 
-      // Получаем выделенный текст
+      
       const selectedText = await getSelectedText(tab);
       console.log('Полученный выделенный текст:', selectedText);
 
@@ -64,7 +83,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
         return;
       }
 
-      // Получаем сохраненные настройки
+     
       const settings = await chrome.storage.sync.get(['prompt', 'apiKey']);
       
       if (!settings.apiKey) {
@@ -97,7 +116,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 
       console.log('Отправляемый запрос:', JSON.stringify(requestBody, null, 2));
 
-      // API запрос с использованием сохраненного токена
+      
       const response = await fetch('https://api.aimlapi.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -122,14 +141,14 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
         throw new Error(`Ошибка при разборе ответа от API: ${e.message}`);
       }
 
-      // Проверяем успешный статус (200 или 201)
+      
       if (response.status !== 200 && response.status !== 201) {
         const errorMessage = data.error?.message || data.error || 'Неизвестная ошибка';
         console.error('API Error:', errorMessage);
         throw new Error(`API вернул ошибку: ${response.status} - ${errorMessage}`);
       }
       
-      // Проверяем структуру ответа
+      
       if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
         console.error('Неожиданный формат ответа:', data);
         throw new Error(`Неожиданный формат ответа от API: ${JSON.stringify(data)}`);
@@ -140,14 +159,14 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
         throw new Error(`Не удалось получить результат из ответа API: ${JSON.stringify(data)}`);
       }
 
-      // Отправляем результат в content script
+      
       await sendMessageToTab(tab, {
         action: "showResult",
         result: result
       });
     } catch (error) {
       console.error('Error:', error);
-      // Отправляем сообщение об ошибке
+      
       await sendMessageToTab(tab, {
         action: "showResult",
         result: `Произошла ошибка при обработке запроса: ${error.message}`
