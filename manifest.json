@@ -1,0 +1,50 @@
+{
+  "manifest_version": 3,
+  "name": "PomPom",
+  "version": "1.0",
+  "description": "Расширение для обработки текста через API",
+  "permissions": [
+    "contextMenus",
+    "storage",
+    "scripting",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://api.aimlapi.com/*",
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": [
+        "lib/highlight.min.js",
+        "lib/languages/sql.min.js",         
+        "lib/languages/javascript.min.js",  
+        
+        "content.js"
+      ],
+      "css": [
+        "lib/styles/github.min.css", 
+        "styles.css"
+      ]
+    }
+  ],
+  "options_page": "options.html",
+  "icons": {
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "inject.js", 
+        "lib/*.js",         
+        "lib/styles/*.css"  
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
