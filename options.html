@@ -4,35 +4,87 @@
   <meta charset="UTF-8">
   <title>Настройки PomPom</title>
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
       width: 100%;
-      max-width: 600px;
-      margin: 20px auto;
+      max-width: 800px;
+      margin: 0 auto;
       padding: 20px;
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: #333;
+    }
+
+    .container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #af4c4c 0%, #d2dfdb 100%);
+      padding: 30px;
+      text-align: center;
+      color: white;
+    }
+
+    .header h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .header .version {
+      font-size: 1.1em;
+      opacity: 0.9;
+      font-weight: 300;
+    }
+
+    .content {
+      padding: 40px;
     }
 
     .form-group {
-      margin-bottom: 20px;
+      margin-bottom: 30px;
     }
 
     label {
       display: block;
-      margin-bottom: 5px;
-      font-weight: bold;
+      margin-bottom: 10px;
+      font-weight: 600;
+      font-size: 1.1em;
+      color: #555;
     }
 
     textarea, input[type="text"], input[type="password"] {
       width: 100%;
-      padding: 8px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      font-size: 14px;
+      padding: 15px;
+      border: 2px solid #e1e5e9;
+      border-radius: 12px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      background: #f8f9fa;
+    }
+
+    textarea:focus, input[type="text"]:focus, input[type="password"]:focus {
+      outline: none;
+      border-color: #af4c4c;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(175, 76, 76, 0.1);
     }
 
     textarea {
-      height: 100px;
+      height: 120px;
       resize: vertical;
+      font-family: inherit;
     }
 
     .api-key-container {
@@ -43,90 +95,261 @@
 
     .api-key-input {
       flex: 1;
-      padding-right: 40px;
+      padding-right: 50px;
     }
 
     .toggle-password {
       position: absolute;
-      right: 8px;
+      right: 12px;
       top: 50%;
       transform: translateY(-50%);
       background: none;
       border: none;
       cursor: pointer;
-      padding: 4px;
-      border-radius: 3px;
+      padding: 8px;
+      border-radius: 8px;
       color: #666;
+      transition: all 0.3s ease;
     }
 
     .toggle-password:hover {
-      background-color: #f0f0f0;
+      background-color: #e9ecef;
       color: #333;
+      transform: translateY(-50%) scale(1.1);
     }
 
     .toggle-password svg {
-      width: 16px;
-      height: 16px;
+      width: 20px;
+      height: 20px;
     }
 
     .save-button {
-      background-color: #af4c4c;
+      background: linear-gradient(135deg, #af4c4c 0%, #d2dfdb 100%);
       color: white;
-      padding: 10px 20px;
+      padding: 15px 30px;
       border: none;
-      border-radius: 4px;
+      border-radius: 12px;
       cursor: pointer;
-      font-size: 16px;
+      font-size: 18px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(175, 76, 76, 0.3);
     }
 
     .save-button:hover {
-      background-color: #d2dfdb;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(175, 76, 76, 0.4);
+    }
+
+    .save-button:active {
+      transform: translateY(0);
     }
 
     .status {
-      margin-top: 10px;
-      padding: 10px;
-      border-radius: 4px;
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 12px;
       display: none;
+      font-weight: 500;
     }
 
     .status.success {
-      background-color: #dff0d8;
-      color: #3c763d;
+      background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+      color: #155724;
+      border: 1px solid #c3e6cb;
       display: block;
     }
 
     .status.error {
-      background-color: #f2dede;
-      color: #a94442;
+      background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+      color: #721c24;
+      border: 1px solid #f5c6cb;
       display: block;
+    }
+
+    
+    .donations {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .donations-header {
+      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+      padding: 25px;
+      text-align: center;
+      color: white;
+    }
+
+    .donations-header h2 {
+      font-size: 1.8em;
+      margin-bottom: 10px;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    }
+
+    .donations-content {
+      padding: 30px;
+    }
+
+    .donation-item {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-left: 4px solid #28a745;
+      transition: all 0.3s ease;
+    }
+
+    .donation-item:hover {
+      transform: translateX(5px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .donation-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .crypto-name {
+      font-weight: 600;
+      font-size: 1.2em;
+      color: #28a745;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+    }
+
+    .crypto-name::before {
+      content: "💰";
+      margin-right: 10px;
+      font-size: 1.5em;
+    }
+
+    .crypto-address {
+      background: white;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 12px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      color: #495057;
+      word-break: break-all;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .crypto-address:hover {
+      background: #e9ecef;
+      border-color: #28a745;
+    }
+
+    .copy-button {
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      margin-top: 10px;
+      transition: all 0.3s ease;
+    }
+
+    .copy-button:hover {
+      background: #218838;
+      transform: scale(1.05);
+    }
+
+    .copy-button.copied {
+      background: #6c757d;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 20px;
+      color: white;
+      opacity: 0.8;
+      font-size: 14px;
+    }
+
+    .footer a {
+      color: white;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .container, .donations {
+      animation: fadeIn 0.6s ease-out;
     }
   </style>
 </head>
 <body>
-  <h1>Настройки PomPom</h1>
-  
-  <div class="form-group">
-    <label for="prompt">Текст промпта:</label>
-    <textarea id="prompt" placeholder="Введите текст промпта..."></textarea>
-  </div>
+  <div class="container">
+    <div class="header">
+      <h1>🎯 PomPom</h1>
+      <div class="version">Версия 1.1 - Расширение для работы с AI</div>
+    </div>
+    
+    <div class="content">
+      <div class="form-group">
+        <label for="prompt">📝 Текст промпта:</label>
+        <textarea id="prompt" placeholder="Введите текст промпта для обработки выделенного текста..."></textarea>
+      </div>
 
-  <div class="form-group">
-    <label for="apiKey">API Key:</label>
-    <div class="api-key-container">
-      <input type="password" id="apiKey" class="api-key-input" placeholder="Введите ваш API Key...">
-      <button type="button" class="toggle-password" id="togglePassword" title="Показать/скрыть API ключ">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-          <circle cx="12" cy="12" r="3"></circle>
-        </svg>
-      </button>
+      <div class="form-group">
+        <label for="apiKey">🔑 API Key:</label>
+        <div class="api-key-container">
+          <input type="password" id="apiKey" class="api-key-input" placeholder="Введите ваш API Key...">
+          <button type="button" class="toggle-password" id="togglePassword" title="Показать/скрыть API ключ">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <button class="save-button" id="saveButton">💾 Сохранить настройки</button>
+      <div id="status" class="status"></div>
     </div>
   </div>
 
-  <button class="save-button" id="saveButton">Сохранить настройки</button>
-  <div id="status" class="status"></div>
+  <div class="donations">
+    <div class="donations-header">
+      <h2>❤️ Поддержать автора</h2>
+      <p>Если расширение помогло вам, можете отблагодарить автора</p>
+    </div>
+    
+    <div class="donations-content">
+      <div class="donation-item">
+        <div class="crypto-name">Toncoin (TON)</div>
+        <div class="crypto-address" id="tonAddress">UQB2pUhI3rUKiy-hR3mHMAcXvQ4_QNVGDEuFZcRU9qa7MMeA</div>
+        <button class="copy-button" onclick="copyToClipboard('tonAddress')">📋 Копировать адрес</button>
+      </div>
+
+      <div class="donation-item">
+        <div class="crypto-name">Bitcoin (BTC)</div>
+        <div class="crypto-address" id="btcAddress">19i9JauVSyDzv9KNDKV1Da9v36GwiZ6at3</div>
+        <button class="copy-button" onclick="copyToClipboard('btcAddress')">📋 Копировать адрес</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>Сделано с ❤️ Сергеем Камановым | <a href="https://github.com/mrKamanov/pompom" target="_blank">GitHub</a></p>
+  </div>
 
   <script src="options.js"></script>
+  <script src="donations.js"></script>
 </body>
 </html> 
