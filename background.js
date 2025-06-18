@@ -175,7 +175,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   }
 });
 
-// Добавляем обработчик сообщений от content.js
+
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
     if (message.action === 'chatMessage') {
         try {
@@ -191,7 +191,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 
             const prompt = settings.prompt || "Напиши только ответ. Кратко и понятно. Если это код, то исправь в нем ошибки, если они есть и покажи целиком. Если в коде пропуски, то дополни его.";
             
-            // Формируем историю сообщений для API
+            
             const messages = [
                 {
                     role: "system",

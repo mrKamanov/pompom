@@ -22,7 +22,7 @@
       font-weight: bold;
     }
 
-    textarea, input[type="text"] {
+    textarea, input[type="text"], input[type="password"] {
       width: 100%;
       padding: 8px;
       border: 1px solid #ccc;
@@ -33,6 +33,40 @@
     textarea {
       height: 100px;
       resize: vertical;
+    }
+
+    .api-key-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .api-key-input {
+      flex: 1;
+      padding-right: 40px;
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 3px;
+      color: #666;
+    }
+
+    .toggle-password:hover {
+      background-color: #f0f0f0;
+      color: #333;
+    }
+
+    .toggle-password svg {
+      width: 16px;
+      height: 16px;
     }
 
     .save-button {
@@ -79,7 +113,15 @@
 
   <div class="form-group">
     <label for="apiKey">API Key:</label>
-    <input type="text" id="apiKey" placeholder="Введите ваш API Key...">
+    <div class="api-key-container">
+      <input type="password" id="apiKey" class="api-key-input" placeholder="Введите ваш API Key...">
+      <button type="button" class="toggle-password" id="togglePassword" title="Показать/скрыть API ключ">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+      </button>
+    </div>
   </div>
 
   <button class="save-button" id="saveButton">Сохранить настройки</button>

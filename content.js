@@ -192,7 +192,7 @@ function makeDraggable(element) {
     }
 
     function closeDragElement() {
-        /* stop moving when mouse button is released:*/
+        
         document.onmouseup = null;
         document.onmousemove = null;
     }
@@ -319,11 +319,11 @@ function setupChatInput(popup) {
         const message = input.value.trim();
         if (!message) return;
 
-        // Добавляем сообщение пользователя в чат
+        
         addMessageToChat(message, true);
         input.value = '';
 
-        // Отправляем сообщение в background.js
+        
         chrome.runtime.sendMessage({
             action: 'chatMessage',
             message: message,
@@ -331,10 +331,10 @@ function setupChatInput(popup) {
         });
     }
 
-    // Отправка по кнопке
+    
     sendButton.addEventListener('click', sendMessage);
 
-    // Отправка по Enter (Shift+Enter для новой строки)
+    
     input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -349,7 +349,7 @@ function showResult(result) {
     setupOpacityControl(popup);
     setupChatInput(popup);
 
-    // Добавляем первое сообщение ассистента
+    
     addMessageToChat(result);
     chatHistory.push({
         role: 'assistant',
@@ -438,7 +438,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const typeButton = popup.querySelector('.pompom-type-button');
         const content = popup.querySelector('.pompom-popup-content');
 
-        // Добавляем первое сообщение ассистента в чат
+        
         addMessageToChat(message.result);
         chatHistory.push({
             role: 'assistant',
@@ -463,25 +463,25 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         console.log('Окно добавлено на страницу:', document.body.contains(popup));
         console.log('Стили окна:', window.getComputedStyle(popup));
     } else if (message.action === 'chatResponse') {
-        // Обновляем lastApiResult для автопечати
+        
         lastApiResult = cleanCodeBlockMarkers(message.result);
         currentTypingState = 'idle';
         
-        // Добавляем сообщение в чат
+        
         addMessageToChat(message.result);
         chatHistory.push({
             role: 'assistant',
             content: message.result
         });
 
-        // Обновляем состояние кнопки печати и её обработчики
+        
         const typeButton = document.querySelector('.pompom-type-button');
         if (typeButton) {
             updateTypeButton(typeButton, 'idle');
-            // Удаляем старые обработчики
+            
             const newTypeButton = typeButton.cloneNode(true);
             typeButton.parentNode.replaceChild(newTypeButton, typeButton);
-            // Добавляем новые обработчики
+            
             setupTypeButton(newTypeButton);
         }
     }
