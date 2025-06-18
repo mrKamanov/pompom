@@ -100,7 +100,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
       console.log('Отправляемый текст:', combinedText);
 
       const requestBody = {
-        model: "google/gemma-3n-e4b-it",
+        model: "google/gemma-3-27b-it",
         messages: [
           {
             role: "user",
@@ -173,4 +173,82 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
       });
     }
   }
+});
+
+// Добавляем обработчик сообщений от content.js
+chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+    if (message.action === 'chatMessage') {
+        try {
+            const settings = await chrome.storage.sync.get(['prompt', 'apiKey']);
+            
+            if (!settings.apiKey) {
+                await sendMessageToTab(sender.tab, {
+                    action: "chatResponse",
+                    result: "Пожалуйста, укажите API Key в настройках расширения."
+                });
+                return;
+            }
+
+            const prompt = settings.prompt || "Напиши только ответ. Кратко и понятно. Если это код, то исправь в нем ошибки, если они есть и покажи целиком. Если в коде пропуски, то дополни его.";
+            
+            // Формируем историю сообщений для API
+            const messages = [
+                {
+                    role: "system",
+                    content: prompt
+                },
+                ...message.history,
+                {
+                    role: "user",
+                    content: message.message
+                }
+            ];
+
+            const requestBody = {
+                model: "google/gemma-3-27b-it",
+                messages: messages,
+                temperature: 0.7,
+                top_p: 0.7,
+                frequency_penalty: 1,
+                max_output_tokens: 512,
+                top_k: 50
+            };
+
+            const response = await fetch('https://api.aimlapi.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${settings.apiKey}`
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            const data = await response.json();
+
+            if (response.status !== 200 && response.status !== 201) {
+                const errorMessage = data.error?.message || data.error || 'Неизвестная ошибка';
+                throw new Error(`API вернул ошибку: ${response.status} - ${errorMessage}`);
+            }
+
+            if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+                throw new Error(`Неожиданный формат ответа от API: ${JSON.stringify(data)}`);
+            }
+
+            const result = data.choices[0].message?.content;
+            if (!result) {
+                throw new Error(`Не удалось получить результат из ответа API: ${JSON.stringify(data)}`);
+            }
+
+            await sendMessageToTab(sender.tab, {
+                action: "chatResponse",
+                result: result
+            });
+        } catch (error) {
+            console.error('Error:', error);
+            await sendMessageToTab(sender.tab, {
+                action: "chatResponse",
+                result: `Произошла ошибка при обработке запроса: ${error.message}`
+            });
+        }
+    }
 }); 

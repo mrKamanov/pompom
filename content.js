@@ -117,7 +117,7 @@ function createPopup() {
           <h3 class="pompom-popup-title">Результат обработки</h3>
           <div class="pompom-popup-controls">
               <div class="pompom-opacity-control">
-                  <input type="range" min="0.1" max="1" step="0.01" value="0.9" class="pompom-opacity-slider" title="Прозрачность">
+                  <input type="range" min="0" max="1" step="0.01" value="0.9" class="pompom-opacity-slider" title="Прозрачность">
               </div>
               <button class="pompom-header-button pompom-type-button" title="Напечатать">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -140,7 +140,17 @@ function createPopup() {
           </div>
       </div>
       <div class="pompom-popup-content">
-          </div>
+          <div class="pompom-chat-history"></div>
+      </div>
+      <div class="pompom-chat-input-container">
+          <textarea class="pompom-chat-input" placeholder="Введите уточняющий вопрос..."></textarea>
+          <button class="pompom-send-button" title="Отправить">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 2L11 13"></path>
+                  <path d="M22 2L15 22L11 13L2 9L22 2Z"></path>
+              </svg>
+          </button>
+      </div>
     `;
     document.body.appendChild(popup);
     return popup;
@@ -289,12 +299,109 @@ function updateTypeButton(buttonElement, state) {
 
 let typingStartTimeout = null;
 
+let chatHistory = [];
+
+function addMessageToChat(message, isUser = false) {
+    const chatHistory = document.querySelector('.pompom-chat-history');
+    const messageElement = document.createElement('div');
+    messageElement.classList.add('pompom-message');
+    messageElement.classList.add(isUser ? 'user' : 'assistant');
+    messageElement.innerHTML = formatApiResponse(message);
+    chatHistory.appendChild(messageElement);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+}
+
+function setupChatInput(popup) {
+    const input = popup.querySelector('.pompom-chat-input');
+    const sendButton = popup.querySelector('.pompom-send-button');
+
+    function sendMessage() {
+        const message = input.value.trim();
+        if (!message) return;
+
+        // Добавляем сообщение пользователя в чат
+        addMessageToChat(message, true);
+        input.value = '';
+
+        // Отправляем сообщение в background.js
+        chrome.runtime.sendMessage({
+            action: 'chatMessage',
+            message: message,
+            history: chatHistory
+        });
+    }
+
+    // Отправка по кнопке
+    sendButton.addEventListener('click', sendMessage);
+
+    // Отправка по Enter (Shift+Enter для новой строки)
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+}
+
+function showResult(result) {
+    const popup = createPopup();
+    makeDraggable(popup);
+    setupOpacityControl(popup);
+    setupChatInput(popup);
+
+    // Добавляем первое сообщение ассистента
+    addMessageToChat(result);
+    chatHistory.push({
+        role: 'assistant',
+        content: result
+    });
+}
+
+function setupTypeButton(typeButton) {
+    typeButton.addEventListener('click', () => {
+        if (currentTypingState === 'idle' || currentTypingState === 'paused' || currentTypingState === 'completed') {
+            updateTypeButton(typeButton, 'waiting_to_start'); 
+            console.log('Нажат Type-кнопка. Запуск/Возобновление через 5 секунд...');
+
+            if (typingStartTimeout) {
+                clearTimeout(typingStartTimeout);
+            }
+
+            typingStartTimeout = setTimeout(() => {
+                if (currentTypingState === 'waiting_to_start') {
+                    console.log('Таймер 5 секунд истек. Отправка команды START_TYPING.');
+                    window.postMessage({
+                        type: 'POMPOM_START_TYPING',
+                        text: lastApiResult 
+                    }, '*');
+                    typingStartTimeout = null; 
+                } else {
+                    console.log("Typing state changed before timer finished. Aborting command.");
+                }
+            }, 5000); 
+        } else if (currentTypingState === 'typing') {
+            console.log('Нажат Type-кнопка. Отправка команды PAUSE_TYPING.');
+            window.postMessage({ type: 'POMPOM_PAUSE_TYPING' }, '*');
+            if (typingStartTimeout) { 
+                clearTimeout(typingStartTimeout);
+                typingStartTimeout = null;
+            }
+        } else if (currentTypingState === 'waiting_to_start') {
+            console.log('Отмена ожидания старта печати.');
+            if (typingStartTimeout) {
+                clearTimeout(typingStartTimeout);
+                typingStartTimeout = null;
+            }
+            updateTypeButton(typeButton, 'idle'); 
+            window.postMessage({ type: 'POMPOM_RESET_TYPING' }, '*');
+        }
+    });
+}
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === "showResult") {
         console.log('Получено сообщение showResult:', message);
 
-        
         lastApiResult = cleanCodeBlockMarkers(message.result);
         currentTypingState = 'idle'; 
 
@@ -313,7 +420,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         console.log('Создано новое окно:', popup);
 
         makeDraggable(popup);
-        setupOpacityControl(popup); 
+        setupOpacityControl(popup);
+        setupChatInput(popup);
 
         const closeButton = popup.querySelector('.pompom-popup-close');
         closeButton.addEventListener('click', () => {
@@ -330,11 +438,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const typeButton = popup.querySelector('.pompom-type-button');
         const content = popup.querySelector('.pompom-popup-content');
 
-        
-        content.innerHTML = formatApiResponse(message.result);
+        // Добавляем первое сообщение ассистента в чат
+        addMessageToChat(message.result);
+        chatHistory.push({
+            role: 'assistant',
+            content: message.result
+        });
 
-        
         updateTypeButton(typeButton, 'idle');
+        setupTypeButton(typeButton);
 
         copyButton.addEventListener('click', async () => {
             try {
@@ -348,57 +460,32 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             }
         });
 
-        
-        typeButton.addEventListener('click', () => {
-            if (currentTypingState === 'idle' || currentTypingState === 'paused' || currentTypingState === 'completed') {
-                
-                updateTypeButton(typeButton, 'waiting_to_start'); 
-                console.log('Нажат Type-кнопка. Запуск/Возобновление через 5 секунд...');
-
-                
-                if (typingStartTimeout) {
-                    clearTimeout(typingStartTimeout);
-                }
-
-                typingStartTimeout = setTimeout(() => {
-                    
-                    if (currentTypingState === 'waiting_to_start') {
-                        console.log('Таймер 5 секунд истек. Отправка команды START_TYPING.');
-                        window.postMessage({
-                            type: 'POMPOM_START_TYPING',
-                            text: lastApiResult 
-                        }, '*');
-                        typingStartTimeout = null; 
-                    } else {
-                        console.log("Typing state changed before timer finished. Aborting command.");
-                    }
-                }, 5000); 
-            } else if (currentTypingState === 'typing') {
-                
-                console.log('Нажат Type-кнопка. Отправка команды PAUSE_TYPING.');
-                window.postMessage({ type: 'POMPOM_PAUSE_TYPING' }, '*');
-                if (typingStartTimeout) { 
-                    clearTimeout(typingStartTimeout);
-                    typingStartTimeout = null;
-                }
-            } else if (currentTypingState === 'waiting_to_start') {
-                
-                console.log('Отмена ожидания старта печати.');
-                if (typingStartTimeout) {
-                    clearTimeout(typingStartTimeout);
-                    typingStartTimeout = null;
-                }
-                updateTypeButton(typeButton, 'idle'); 
-                
-                window.postMessage({ type: 'POMPOM_RESET_TYPING' }, '*');
-            }
-        });
-
         console.log('Окно добавлено на страницу:', document.body.contains(popup));
         console.log('Стили окна:', window.getComputedStyle(popup));
+    } else if (message.action === 'chatResponse') {
+        // Обновляем lastApiResult для автопечати
+        lastApiResult = cleanCodeBlockMarkers(message.result);
+        currentTypingState = 'idle';
+        
+        // Добавляем сообщение в чат
+        addMessageToChat(message.result);
+        chatHistory.push({
+            role: 'assistant',
+            content: message.result
+        });
+
+        // Обновляем состояние кнопки печати и её обработчики
+        const typeButton = document.querySelector('.pompom-type-button');
+        if (typeButton) {
+            updateTypeButton(typeButton, 'idle');
+            // Удаляем старые обработчики
+            const newTypeButton = typeButton.cloneNode(true);
+            typeButton.parentNode.replaceChild(newTypeButton, typeButton);
+            // Добавляем новые обработчики
+            setupTypeButton(newTypeButton);
+        }
     }
 });
-
 
 window.addEventListener('message', (event) => {
     if (event.source === window && event.data && event.data.type === 'POMPOM_TYPING_STATE') {
