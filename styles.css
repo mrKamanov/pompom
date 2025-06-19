@@ -1,52 +1,94 @@
+@keyframes unfurl-animation {
+  0% {
+    opacity: 0;
+    transform: scale(0.3, 0.1) rotate(10deg);
+    filter: blur(3px);
+  }
+  60% {
+    opacity: var(--target-opacity, 0.9);
+    transform: scale(1.05) rotate(-2deg);
+    filter: blur(0);
+  }
+  100% {
+    opacity: var(--target-opacity, 0.9);
+    transform: scale(1) rotate(0deg);
+  }
+}
+
 .pompom-popup-container {
   position: fixed;
   top: 20px;
   right: 20px;
-  width: 400px;
-  background-color: #ffffff; 
-  border: 1px solid #e0e0e0; 
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); 
-  z-index: 2147483647; 
-  opacity: 1;
+  width: 440px;
+  background: url('data:image/svg+xml;utf8,<svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="60" fill="%23fafdff"/><path d="M0 10h60M0 20h60M0 30h60M0 40h60M0 50h60M10 0v60M20 0v60M30 0v60M40 0v60M50 0v60" stroke="%23e0c97f" stroke-opacity="0.3" stroke-width="1"/></svg>');
+  border: none;
+  border-radius: 0;
+  z-index: 2147483647;
+  opacity: 0;
   transition: opacity 0.2s ease-in-out;
   display: flex;
   flex-direction: column;
   font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-  color: #333; 
-  overflow: hidden; 
+  color: #333;
+  overflow: visible;
+  box-shadow: none;
+  clip-path: polygon(0 0, 8% 4%, 15% 2%, 25% 5%, 35% 1%, 45% 3%, 100% 0, 100% 100%, 95% 98%, 85% 99%, 75% 97%, 65% 99%, 55% 98%, 45% 99%, 35% 97%, 25% 99%, 15% 98%, 5% 99%, 0 97%);
+  transform-origin: top right;
+  animation: unfurl-animation 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
+.pompom-popup-container::before {
+  content: "";
+  position: absolute;
+  left: -2px;
+  top: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: transparent;
+  border: 2px solid #e0c97f;
+  border-left-width: 3px;
+  clip-path: polygon(0 0, 8% 4%, 15% 2%, 25% 5%, 35% 1%, 45% 3%, 100% 0, 100% 100%, 95% 98%, 85% 99%, 75% 97%, 65% 99%, 55% 98%, 45% 99%, 35% 97%, 25% 99%, 15% 98%, 5% 99%, 0 97%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.pompom-popup-container::after {
+  display: none;
+}
 
 .pompom-popup-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
-  padding: 8px 15px;
-  background-color: #f8f8f8; 
-  border-bottom: 1px solid #e0e0e0; 
-  border-radius: 12px 12px 0 0; 
-  cursor: move; 
-  user-select: none; 
-  flex-shrink: 0; 
+  padding: 14px 22px 10px 22px;
+  background: transparent;
+  border-bottom: none;
+  border-radius: 22px 22px 0 0;
+  cursor: move;
+  user-select: none;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 3;
 }
-
 
 .pompom-popup-title {
   margin: 0;
-  font-size: 16px;
-  font-weight: 600; 
-  color: #555;
-  flex-grow: 1; 
+  font-size: 20px;
+  font-weight: 700;
+  color: #b48a2c;
+  flex-grow: 1;
+  text-shadow: 0 1px 0 #fff;
+  border-bottom: 2px solid #f3e9c7;
+  padding-bottom: 2px;
 }
-
 
 .pompom-popup-controls {
   display: flex;
   align-items: center;
-  gap: 8px; 
+  gap: 4px;
+  position: relative;
+  z-index: 3;
 }
-
 
 .pompom-opacity-control {
   display: flex;
@@ -87,66 +129,95 @@
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 
-
-.pompom-header-button {
-  background: none; 
-  border: none; 
-  cursor: pointer;
-  padding: 6px;
-  color: #666; 
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px; 
-  height: 32px; 
-  border-radius: 6px; 
-  outline: none; 
-  flex-shrink: 0; 
-  position: relative; 
+.pompom-header-button, .pompom-send-button {
+  all: unset;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  background: #fff !important;
+  border: 1.5px solid #e0c97f !important;
+  color: #b48a2c !important;
+  border-radius: 7px !important;
+  width: 26px !important;
+  height: 26px !important;
+  padding: 2px !important;
+  margin: 0 !important;
+  font: inherit !important;
+  font-size: 16px !important;
+  font-weight: 400 !important;
+  outline: none !important;
+  box-shadow: 0 2px 6px rgba(180,138,44,0.07) !important;
+  cursor: pointer !important;
+  transition: all 0.2s !important;
 }
 
-.pompom-header-button:hover {
-  color: #333; 
-  background-color: rgba(0, 0, 0, 0.08); 
+.pompom-header-button:hover, .pompom-send-button:hover {
+  background: #ffe9a7 !important;
+  color: #fff !important;
+  border-color: #e0c97f !important;
 }
 
-.pompom-header-button:active {
-  background-color: rgba(0, 0, 0, 0.15); 
-  transform: translateY(1px); 
+.pompom-header-button:active, .pompom-send-button:active {
+  background: #f3e9c7 !important;
+  color: #b48a2c !important;
 }
 
-
-.pompom-header-button svg {
-  width: 20px;
-  height: 20px;
-  stroke-width: 2; 
+.pompom-header-button:disabled, .pompom-send-button:disabled {
+  background: #fffbe7 !important;
+  color: #ccc !important;
+  border-color: #f3e9c7 !important;
+  cursor: not-allowed !important;
+  opacity: 0.5 !important;
 }
 
-
-.pompom-header-button:disabled {
-    cursor: not-allowed;
-    opacity: 0.5; 
-    background-color: transparent !important; 
-    color: #999; 
+.pompom-header-button svg, .pompom-send-button svg {
+  width: 16px !important;
+  height: 16px !important;
+  display: block !important;
+  margin: 0 !important;
+  vertical-align: initial !important;
+  stroke-width: 2 !important;
+  fill: none !important;
+  stroke: currentColor !important;
+  box-sizing: border-box !important;
+  background: none !important;
+  border: none !important;
+  padding: 0 !important;
+  font: inherit !important;
+  color: inherit !important;
+  outline: none !important;
+  text-shadow: none !important;
+  appearance: none !important;
 }
-
 
 .pompom-copy-button.copied {
   color: #28a745; 
 }
 
-
 .pompom-popup-content {
-  padding: 15px;
-  max-height: 400px; 
-  overflow-y: auto; 
+  padding: 18px 22px 12px 22px;
+  max-height: 400px;
+  overflow-y: auto;
   font-size: 14px;
   line-height: 1.6;
-  color: #444; 
-  flex-grow: 1; 
+  color: #444;
+  flex-grow: 1;
+  position: relative;
+  background: transparent;
 }
 
+.pompom-popup-content::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml;utf8,<svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="60" fill="%23fafdff"/><path d="M0 10h60M0 20h60M0 30h60M0 40h60M0 50h60M10 0v60M20 0v60M30 0v60M40 0v60M50 0v60" stroke="%23e0c97f" stroke-opacity="0.3" stroke-width="1"/></svg>');
+  z-index: 1;
+  pointer-events: none;
+}
 
 .pompom-popup-content p {
   margin-bottom: 1em;
@@ -156,7 +227,6 @@
 .pompom-popup-content p:last-child {
     margin-bottom: 0;
 }
-
 
 .pompom-popup-content::-webkit-scrollbar {
   width: 8px;
@@ -175,7 +245,6 @@
 .pompom-popup-content::-webkit-scrollbar-thumb:hover {
   background: #777; 
 }
-
 
 .hljs {
   display: block;
@@ -258,37 +327,46 @@
 }
 
 .pompom-chat-history {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-bottom: 15px;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  background: url('data:image/svg+xml;utf8,<svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="60" fill="%23fafdff"/><path d="M0 10h60M0 20h60M0 30h60M0 40h60M0 50h60M10 0v60M20 0v60M30 0v60M40 0v60M50 0v60" stroke="%23e0c97f" stroke-opacity="0.3" stroke-width="1"/></svg>');
 }
 
 .pompom-message {
-    padding: 10px;
-    border-radius: 8px;
-    max-width: 85%;
-    word-wrap: break-word;
+  position: relative;
+  z-index: 2;
+  background: rgba(250, 253, 255, 0.95);
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(224, 201, 127, 0.1);
+  max-width: 85%;
+  word-wrap: break-word;
 }
 
 .pompom-message.user {
-    background-color: #e3f2fd;
-    align-self: flex-end;
-    margin-left: auto;
+  align-self: flex-end;
+  background: rgba(255, 233, 167, 0.95);
+  margin-left: auto;
 }
 
 .pompom-message.assistant {
-    background-color: #f5f5f5;
-    align-self: flex-start;
-    margin-right: auto;
+  align-self: flex-start;
+  margin-right: auto;
 }
 
 .pompom-chat-input-container {
-    display: flex;
-    gap: 10px;
-    padding: 10px;
-    border-top: 1px solid #e0e0e0;
-    background-color: #f8f8f8;
+  position: relative;
+  z-index: 2;
+  background: rgba(250, 253, 255, 0.95);
+  padding: 12px 22px 22px;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-top: auto;
 }
 
 .pompom-chat-input {
@@ -310,37 +388,17 @@
     border-color: #2196f3;
 }
 
-.pompom-send-button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 8px;
-    color: #2196f3;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
-    flex-shrink: 0;
-}
-
-.pompom-send-button:hover {
-    background-color: rgba(33, 150, 243, 0.1);
-}
-
-.pompom-send-button:active {
-    transform: translateY(1px);
-}
-
 .pompom-send-button svg {
-    width: 24px;
-    height: 24px;
+    width: 16px;
+    height: 16px;
+    display: block;
+    margin: 0;
+    vertical-align: initial;
 }
 
 .pompom-send-button:disabled {
     color: #ccc;
     cursor: not-allowed;
-    background-color: transparent;
+    background-color: #fffbe7;
+    border-color: #f3e9c7;
 }

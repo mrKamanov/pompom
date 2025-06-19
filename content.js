@@ -111,10 +111,11 @@ function cleanCodeBlockMarkers(text) {
 function createPopup() {
     const popup = document.createElement('div');
     popup.classList.add('pompom-popup-container'); 
+    popup.style.right = '20px';
+    popup.style.top = '20px';
 
     popup.innerHTML = `
       <div class="pompom-popup-header">
-          <h3 class="pompom-popup-title">Результат обработки</h3>
           <div class="pompom-popup-controls">
               <div class="pompom-opacity-control">
                   <input type="range" min="0" max="1" step="0.01" value="0.9" class="pompom-opacity-slider" title="Прозрачность">
@@ -152,6 +153,13 @@ function createPopup() {
           </button>
       </div>
     `;
+
+    // Добавляем белый фон для контента
+    const content = popup.querySelector('.pompom-popup-content');
+    content.style.background = '#fafdff';
+    content.style.position = 'relative';
+    content.style.zIndex = '1';
+
     document.body.appendChild(popup);
     return popup;
 }
@@ -199,30 +207,31 @@ function makeDraggable(element) {
 }
 
 function setupOpacityControl(popup) {
-    const slider = popup.querySelector('.pompom-opacity-slider'); 
+    const slider = popup.querySelector('.pompom-opacity-slider');
     if (slider) {
-        
         chrome.storage.sync.get(['pompomOpacity'], (result) => {
-            const savedOpacity = result.pompomOpacity;
-            if (typeof savedOpacity === 'number') { 
+            const savedOpacity = (typeof result.pompomOpacity === 'number') ? result.pompomOpacity : 0.9;
+            slider.value = savedOpacity;
+
+            popup.style.setProperty('--target-opacity', savedOpacity);
+
+            if (savedOpacity < 0.1) {
+                popup.style.animation = 'none';
                 popup.style.opacity = savedOpacity;
-                slider.value = savedOpacity;
             } else {
-                
-                popup.style.opacity = slider.value;
+                popup.style.opacity = '0';
             }
         });
 
         slider.addEventListener('input', (e) => {
             const newOpacity = parseFloat(e.target.value);
             popup.style.opacity = newOpacity;
-            
+            popup.style.setProperty('--target-opacity', newOpacity);
             chrome.storage.sync.set({ pompomOpacity: newOpacity });
         });
 
-        
         slider.addEventListener('mousedown', (e) => {
-            e.stopPropagation(); 
+            e.stopPropagation();
         });
     }
 }
