@@ -1,3 +1,4 @@
+// PomPom options.js — версия 1.12
 /**
  * options.js - Скрипт страницы настроек расширения PomPom
  * 
@@ -24,7 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
     'prompt1', 'prompt2', 'prompt3',
     'prompt1Title', 'prompt2Title', 'prompt3Title',
     'apiKey', 'minTypingDelay', 'maxTypingDelay',
-    'aimlapi_model'], (result) => {
+    'aimlapi_model',
+    'api_provider',
+    'openrouter_apiKey',
+    'openrouter_model'], (result) => {
     if (result.prompt1Title) document.getElementById('prompt1Title').value = result.prompt1Title;
     if (result.prompt2Title) document.getElementById('prompt2Title').value = result.prompt2Title;
     if (result.prompt3Title) document.getElementById('prompt3Title').value = result.prompt3Title;
@@ -35,6 +39,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (result.minTypingDelay !== undefined) document.getElementById('minTypingDelay').value = result.minTypingDelay;
     if (result.maxTypingDelay !== undefined) document.getElementById('maxTypingDelay').value = result.maxTypingDelay;
     if (result.aimlapi_model) document.getElementById('aimlapi_model').value = result.aimlapi_model;
+    if (result.api_provider) document.getElementById('api_provider').value = result.api_provider;
+    if (result.openrouter_apiKey) document.getElementById('openrouter_apiKey').value = result.openrouter_apiKey;
+    if (result.openrouter_model) document.getElementById('openrouter_model').value = result.openrouter_model;
   });
 
   
@@ -54,16 +61,31 @@ document.addEventListener('DOMContentLoaded', () => {
 function setupApiKeyToggle() {
   const apiKeyInput = document.getElementById('apiKey');
   const toggleBtn = document.getElementById('togglePassword');
-  if (!apiKeyInput || !toggleBtn) return;
-  toggleBtn.addEventListener('click', function() {
-    if (apiKeyInput.type === 'password') {
-      apiKeyInput.type = 'text';
-      toggleBtn.setAttribute('aria-label', 'Скрыть API ключ');
-    } else {
-      apiKeyInput.type = 'password';
-      toggleBtn.setAttribute('aria-label', 'Показать API ключ');
-    }
-  });
+  if (apiKeyInput && toggleBtn) {
+    toggleBtn.addEventListener('click', function() {
+      if (apiKeyInput.type === 'password') {
+        apiKeyInput.type = 'text';
+        toggleBtn.setAttribute('aria-label', 'Скрыть API ключ');
+      } else {
+        apiKeyInput.type = 'password';
+        toggleBtn.setAttribute('aria-label', 'Показать API ключ');
+      }
+    });
+  }
+  // Для OpenRouter
+  const openrouterApiKeyInput = document.getElementById('openrouter_apiKey');
+  const toggleOpenRouterBtn = document.getElementById('toggleOpenRouterPassword');
+  if (openrouterApiKeyInput && toggleOpenRouterBtn) {
+    toggleOpenRouterBtn.addEventListener('click', function() {
+      if (openrouterApiKeyInput.type === 'password') {
+        openrouterApiKeyInput.type = 'text';
+        toggleOpenRouterBtn.setAttribute('aria-label', 'Скрыть API ключ');
+      } else {
+        openrouterApiKeyInput.type = 'password';
+        toggleOpenRouterBtn.setAttribute('aria-label', 'Показать API ключ');
+      }
+    });
+  }
 }
 
 document.getElementById('saveButton').addEventListener('click', () => {
@@ -77,9 +99,15 @@ document.getElementById('saveButton').addEventListener('click', () => {
   const minTypingDelay = parseInt(document.getElementById('minTypingDelay').value, 10);
   const maxTypingDelay = parseInt(document.getElementById('maxTypingDelay').value, 10);
   const aimlapi_model = document.getElementById('aimlapi_model').value;
+  const api_provider = document.getElementById('api_provider').value;
+  const openrouter_apiKey = document.getElementById('openrouter_apiKey').value;
+  const openrouter_model = document.getElementById('openrouter_model').value;
   const status = document.getElementById('status');
 
-  if (!prompt1 || !prompt2 || !prompt3 || !apiKey) {
+  let apiKeyValid = true;
+  if (api_provider === 'aimlapi' && !apiKey) apiKeyValid = false;
+  if (api_provider === 'openrouter' && !openrouter_apiKey) apiKeyValid = false;
+  if (!prompt1 || !prompt2 || !prompt3 || !apiKeyValid) {
     status.textContent = 'Пожалуйста, заполните все поля';
     status.className = 'status error';
     return;
@@ -96,7 +124,10 @@ document.getElementById('saveButton').addEventListener('click', () => {
     apiKey,
     minTypingDelay,
     maxTypingDelay,
-    aimlapi_model
+    aimlapi_model,
+    api_provider,
+    openrouter_apiKey,
+    openrouter_model
   }, () => {
     status.textContent = 'Настройки сохранены';
     status.className = 'status success';

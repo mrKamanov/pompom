@@ -1,4 +1,6 @@
 /**
+ * PomPom background.js — версия 1.12
+ * 
  * background.js - Фоновый скрипт расширения PomPom
  * 
  * Этот файл отвечает за:
@@ -19,6 +21,7 @@
  */
 
 import { sendAIMLAPIRequest } from './API/aimlapi.js';
+import { sendToOpenRouter } from './API/openrouterapi.js';
 
 async function createContextMenu() {
   const settings = await chrome.storage.sync.get([
@@ -115,7 +118,8 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
         });
         return;
       }
-      const settings = await chrome.storage.sync.get(['prompt1', 'prompt2', 'prompt3', 'apiKey', 'aimlapi_model']);
+      const settings = await chrome.storage.sync.get([
+        'prompt1', 'prompt2', 'prompt3', 'apiKey', 'aimlapi_model', 'api_provider', 'openrouter_apiKey', 'openrouter_model']);
       if (!settings.apiKey) {
         await sendMessageToTab(tab, {
           action: "showResult",
@@ -138,7 +142,12 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
         });
         return;
       }
-      const result = await sendAIMLAPIRequest(tab, prompt, selectedText, settings.apiKey, settings.aimlapi_model);
+      let result = '';
+      if (settings.api_provider === 'openrouter') {
+        result = await sendToOpenRouter(selectedText, settings.openrouter_apiKey, { model: settings.openrouter_model });
+      } else {
+        result = await sendAIMLAPIRequest(tab, prompt, selectedText, settings.apiKey, settings.aimlapi_model);
+      }
       await sendMessageToTab(tab, {
         action: "showResult",
         result: result
@@ -157,7 +166,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
     if (message.action === 'chatMessage') {
         try {
-            const settings = await chrome.storage.sync.get(['prompt', 'apiKey', 'aimlapi_model']);
+            const settings = await chrome.storage.sync.get(['prompt', 'apiKey', 'aimlapi_model', 'api_provider', 'openrouter_apiKey', 'openrouter_model']);
             
             if (!settings.apiKey) {
                 await sendMessageToTab(sender.tab, {
@@ -182,7 +191,12 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
                 }
             ];
 
-            const result = await sendAIMLAPIRequest(sender.tab, prompt, message.message, settings.apiKey, settings.aimlapi_model);
+            let result = '';
+            if (settings.api_provider === 'openrouter') {
+              result = await sendToOpenRouter(message.message, settings.openrouter_apiKey, { model: settings.openrouter_model, messages: message.history });
+            } else {
+              result = await sendAIMLAPIRequest(sender.tab, prompt, message.message, settings.apiKey, settings.aimlapi_model);
+            }
 
             await sendMessageToTab(sender.tab, {
                 action: "chatResponse",
@@ -208,7 +222,7 @@ async function processSelectedTextWithPrompt(tab, promptIndex) {
     return;
   }
   const settings = await chrome.storage.sync.get([
-    'prompt1', 'prompt2', 'prompt3', 'apiKey', 'aimlapi_model'
+    'prompt1', 'prompt2', 'prompt3', 'apiKey', 'aimlapi_model', 'api_provider', 'openrouter_apiKey', 'openrouter_model'
   ]);
   if (!settings.apiKey) {
     await sendMessageToTab(tab, {
@@ -229,7 +243,12 @@ async function processSelectedTextWithPrompt(tab, promptIndex) {
     return;
   }
   try {
-    const result = await sendAIMLAPIRequest(tab, prompt, selectedText, settings.apiKey, settings.aimlapi_model);
+    let result = '';
+    if (settings.api_provider === 'openrouter') {
+      result = await sendToOpenRouter(selectedText, settings.openrouter_apiKey, { model: settings.openrouter_model });
+    } else {
+      result = await sendAIMLAPIRequest(tab, prompt, selectedText, settings.apiKey, settings.aimlapi_model);
+    }
     await sendMessageToTab(tab, {
       action: "showResult",
       result: result
