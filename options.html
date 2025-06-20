@@ -319,6 +319,15 @@
         </div>
       </div>
 
+      <div class="form-group">
+        <label for="minTypingDelay">Минимальный интервал печати (мс)</label>
+        <input type="number" id="minTypingDelay" min="1" max="10000" step="1" value="30">
+      </div>
+      <div class="form-group">
+        <label for="maxTypingDelay">Максимальный интервал печати (мс)</label>
+        <input type="number" id="maxTypingDelay" min="1" max="10000" step="1" value="120">
+      </div>
+
       <button class="save-button" id="saveButton">💾 Сохранить настройки</button>
       <div id="status" class="status"></div>
     </div>

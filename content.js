@@ -379,10 +379,21 @@ function setupTypeButton(typeButton) {
             typingStartTimeout = setTimeout(() => {
                 if (currentTypingState === 'waiting_to_start') {
                     console.log('Таймер 5 секунд истек. Отправка команды START_TYPING.');
-                    window.postMessage({
-                        type: 'POMPOM_START_TYPING',
-                        text: lastApiResult 
-                    }, '*');
+                    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
+                        chrome.storage.sync.get(['minTypingDelay', 'maxTypingDelay'], (result) => {
+                            window.postMessage({
+                                type: 'POMPOM_START_TYPING',
+                                text: lastApiResult,
+                                minTypingDelay: result.minTypingDelay,
+                                maxTypingDelay: result.maxTypingDelay
+                            }, '*');
+                        });
+                    } else {
+                        window.postMessage({
+                            type: 'POMPOM_START_TYPING',
+                            text: lastApiResult
+                        }, '*');
+                    }
                     typingStartTimeout = null; 
                 } else {
                     console.log("Typing state changed before timer finished. Aborting command.");

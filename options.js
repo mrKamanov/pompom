@@ -21,12 +21,18 @@
 
 document.addEventListener('DOMContentLoaded', () => {
   
-  chrome.storage.sync.get(['prompt', 'apiKey'], (result) => {
+  chrome.storage.sync.get(['prompt', 'apiKey', 'minTypingDelay', 'maxTypingDelay'], (result) => {
     if (result.prompt) {
       document.getElementById('prompt').value = result.prompt;
     }
     if (result.apiKey) {
       document.getElementById('apiKey').value = result.apiKey;
+    }
+    if (result.minTypingDelay !== undefined) {
+      document.getElementById('minTypingDelay').value = result.minTypingDelay;
+    }
+    if (result.maxTypingDelay !== undefined) {
+      document.getElementById('maxTypingDelay').value = result.maxTypingDelay;
     }
   });
 
@@ -73,24 +79,29 @@ function setupApiKeyToggle() {
 document.getElementById('saveButton').addEventListener('click', () => {
   const prompt = document.getElementById('prompt').value;
   const apiKey = document.getElementById('apiKey').value;
+  const minTypingDelay = parseInt(document.getElementById('minTypingDelay').value, 10);
+  const maxTypingDelay = parseInt(document.getElementById('maxTypingDelay').value, 10);
   const status = document.getElementById('status');
 
-  
   if (!prompt || !apiKey) {
     status.textContent = 'Пожалуйста, заполните все поля';
     status.className = 'status error';
     return;
   }
+  if (isNaN(minTypingDelay) || isNaN(maxTypingDelay) || minTypingDelay < 1 || maxTypingDelay < 1 || minTypingDelay > maxTypingDelay) {
+    status.textContent = 'Проверьте интервалы печати: минимальный должен быть ≥ 1, максимальный ≥ минимального';
+    status.className = 'status error';
+    return;
+  }
 
-  
   chrome.storage.sync.set({
     prompt: prompt,
-    apiKey: apiKey
+    apiKey: apiKey,
+    minTypingDelay: minTypingDelay,
+    maxTypingDelay: maxTypingDelay
   }, () => {
     status.textContent = 'Настройки сохранены';
     status.className = 'status success';
-    
-    
     setTimeout(() => {
       status.style.display = 'none';
     }, 3000);

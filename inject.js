@@ -24,7 +24,54 @@ let typingTimeoutId = null;
 let activeElement = null; 
 let isTypingRequested = false; 
 let isTypingInProgress = false; 
+let minTypingDelay = 30;
+let maxTypingDelay = 120;
 
+// --- ДОБАВЛЯЕМ МЕХАНИКУ ОПЕЧАТОК ---
+let typoPositions = [];
+let typoCount = 0;
+let typoState = null; // null | 'typo' | 'backspace' | 'correction'
+let typoChar = '';
+
+// Карта соседей по клавиатуре (латиница + цифры, можно расширить)
+const keyboardNeighbors = {
+    'q': ['w', 'a'], 'w': ['q', 'e', 's'], 'e': ['w', 'r', 'd'], 'r': ['e', 't', 'f'], 't': ['r', 'y', 'g'],
+    'y': ['t', 'u', 'h'], 'u': ['y', 'i', 'j'], 'i': ['u', 'o', 'k'], 'o': ['i', 'p', 'l'], 'p': ['o', 'l'],
+    'a': ['q', 's', 'z'], 's': ['a', 'd', 'w', 'z', 'x'], 'd': ['s', 'f', 'e', 'x', 'c'], 'f': ['d', 'g', 'r', 'c', 'v'],
+    'g': ['f', 'h', 't', 'v', 'b'], 'h': ['g', 'j', 'y', 'b', 'n'], 'j': ['h', 'k', 'u', 'n', 'm'], 'k': ['j', 'l', 'i', 'm'],
+    'l': ['k', 'o', 'p'], 'z': ['a', 's', 'x'], 'x': ['z', 's', 'd', 'c'], 'c': ['x', 'd', 'f', 'v'],
+    'v': ['c', 'f', 'g', 'b'], 'b': ['v', 'g', 'h', 'n'], 'n': ['b', 'h', 'j', 'm'], 'm': ['n', 'j', 'k'],
+    '1': ['2', 'q'], '2': ['1', '3', 'w'], '3': ['2', '4', 'e'], '4': ['3', '5', 'r'], '5': ['4', '6', 't'],
+    '6': ['5', '7', 'y'], '7': ['6', '8', 'u'], '8': ['7', '9', 'i'], '9': ['8', '0', 'o'], '0': ['9', 'p']
+};
+
+function getNeighborChar(char) {
+    const lower = char.toLowerCase();
+    if (keyboardNeighbors[lower]) {
+        const neighbors = keyboardNeighbors[lower];
+        return neighbors[Math.floor(Math.random() * neighbors.length)];
+    }
+    return null;
+}
+
+function pickTypoPositions(text) {
+    const positions = [];
+    let tries = 0;
+    while (positions.length < 3 && tries < 100) {
+        const pos = Math.floor(Math.random() * (text.length - 1)) + 1; // не первая буква
+        const char = text[pos];
+        if (
+            !positions.includes(pos) &&
+            /[a-zA-Zа-яА-Я0-9]/.test(char) && // только буквы и цифры
+            char !== ' ' &&
+            !'.,!?;:'.includes(char)
+        ) {
+            positions.push(pos);
+        }
+        tries++;
+    }
+    return positions;
+}
 
 const TYPING_STATE = {
     IDLE: 'idle',           
@@ -35,8 +82,6 @@ const TYPING_STATE = {
 };
 
 
-const MIN_TYPING_DELAY = 30; 
-const MAX_TYPING_DELAY = 120; 
 const PAUSE_AFTER_SENTENCE_MS = 200; 
 const PAUSE_AFTER_COMMA_MS = 100;    
 
@@ -82,48 +127,98 @@ function typeCharacter() {
         return;
     }
 
-    const char = typingText[currentIndex];
-
-    if (activeElement.tagName === 'TEXTAREA' || activeElement.tagName === 'INPUT') {
-        activeElement.value += char;
-    } else if (activeElement.isContentEditable) {
-        
-        const selection = window.getSelection();
-        if (selection.rangeCount > 0) {
-            const range = selection.getRangeAt(0);
-            range.deleteContents(); 
-            range.insertNode(document.createTextNode(char));
-            range.collapse(false); 
-            selection.removeAllRanges();
-            selection.addRange(range);
-        } else {
-            
-            activeElement.focus(); 
-            document.execCommand('insertText', false, char);
+    // --- ОПЕЧАТКИ ---
+    if (typoState === 'typo') {
+        // Вставляем ошибочный символ
+        insertChar(typoChar);
+        typoState = 'backspace';
+        typingTimeoutId = setTimeout(typeCharacter, 120 + Math.random() * 100); // небольшая пауза
+        return;
+    } else if (typoState === 'backspace') {
+        // Симулируем Backspace
+        removeLastChar();
+        typoState = 'correction';
+        typingTimeoutId = setTimeout(typeCharacter, 120 + Math.random() * 100);
+        return;
+    } else if (typoState === 'correction') {
+        // Вставляем правильный символ
+        insertChar(typingText[currentIndex]);
+        typoState = null;
+        currentIndex++;
+        let delay = Math.random() * (maxTypingDelay - minTypingDelay) + minTypingDelay;
+        typingTimeoutId = setTimeout(typeCharacter, delay);
+        return;
+    }
+    // --- Обычная печать ---
+    if (
+        typoCount < 3 &&
+        typoPositions.includes(currentIndex) &&
+        /[a-zA-Zа-яА-Я0-9]/.test(typingText[currentIndex])
+    ) {
+        const neighbor = getNeighborChar(typingText[currentIndex]);
+        if (neighbor) {
+            typoChar = neighbor;
+            typoState = 'typo';
+            typoCount++;
+            typeCharacter();
+            return;
         }
     }
-
-    
-    activeElement.dispatchEvent(new Event('input', { bubbles: true }));
-    activeElement.dispatchEvent(new Event('change', { bubbles: true }));
-
+    // Обычная печать
+    insertChar(typingText[currentIndex]);
     currentIndex++;
-
-    let delay = Math.random() * (MAX_TYPING_DELAY - MIN_TYPING_DELAY) + MIN_TYPING_DELAY;
-
-    
-    if (char === '.' || char === '!' || char === '?') {
+    let delay = Math.random() * (maxTypingDelay - minTypingDelay) + minTypingDelay;
+    if (typingText[currentIndex - 1] === '.' || typingText[currentIndex - 1] === '!' || typingText[currentIndex - 1] === '?') {
         delay += PAUSE_AFTER_SENTENCE_MS;
-    } else if (char === ',') {
+    } else if (typingText[currentIndex - 1] === ',') {
         delay += PAUSE_AFTER_COMMA_MS;
     }
-
-    
     typingTimeoutId = setTimeout(typeCharacter, delay);
 }
 
+function insertChar(char) {
+    if (activeElement.tagName === 'TEXTAREA' || activeElement.tagName === 'INPUT') {
+        activeElement.value += char;
+    } else if (activeElement.isContentEditable) {
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+            range.deleteContents();
+            range.insertNode(document.createTextNode(char));
+            range.collapse(false);
+            selection.removeAllRanges();
+            selection.addRange(range);
+        } else {
+            activeElement.focus();
+            document.execCommand('insertText', false, char);
+        }
+    }
+    activeElement.dispatchEvent(new Event('input', { bubbles: true }));
+    activeElement.dispatchEvent(new Event('change', { bubbles: true }));
+}
 
-function startTyping(text, startIndex = 0) {
+function removeLastChar() {
+    if (activeElement.tagName === 'TEXTAREA' || activeElement.tagName === 'INPUT') {
+        activeElement.value = activeElement.value.slice(0, -1);
+    } else if (activeElement.isContentEditable) {
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+            range.setStart(range.endContainer, Math.max(0, range.endOffset - 1));
+            range.deleteContents();
+            range.collapse(false);
+            selection.removeAllRanges();
+            selection.addRange(range);
+        } else {
+            activeElement.focus();
+            document.execCommand('delete', false, null);
+        }
+    }
+    activeElement.dispatchEvent(new Event('input', { bubbles: true }));
+    activeElement.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+function startTyping(text, startIndex = 0, customMinDelay, customMaxDelay) {
     if (isTypingInProgress && typingTimeoutId) {
         console.log('Inject.js: Печать уже в процессе, игнорируем START.');
         return;
@@ -138,18 +233,66 @@ function startTyping(text, startIndex = 0) {
     }
     activeElement = currentFocus; 
 
-    typingText = text;
-    currentIndex = startIndex;
-    isTypingRequested = true; 
-    isTypingInProgress = true; 
-    sendTypingState(TYPING_STATE.TYPING);
-    console.log('Inject.js: Начинаем/Возобновляем печать с индекса', startIndex);
-
-    
-    if (typingTimeoutId) {
-        clearTimeout(typingTimeoutId);
+    if (typeof customMinDelay === 'number' && typeof customMaxDelay === 'number') {
+        minTypingDelay = customMinDelay;
+        maxTypingDelay = customMaxDelay;
+        console.log('[PomPom] minTypingDelay (final):', minTypingDelay, 'maxTypingDelay (final):', maxTypingDelay);
+        typingText = text;
+        currentIndex = startIndex;
+        isTypingRequested = true; 
+        isTypingInProgress = true; 
+        sendTypingState(TYPING_STATE.TYPING);
+        console.log('Inject.js: Начинаем/Возобновляем печать с индекса', startIndex);
+        if (typingTimeoutId) {
+            clearTimeout(typingTimeoutId);
+        }
+        // Сброс состояния опечаток
+        typoPositions = pickTypoPositions(text);
+        typoCount = 0;
+        typoState = null;
+        typoChar = '';
+        typeCharacter(); 
+    } else if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
+        chrome.storage.sync.get(['minTypingDelay', 'maxTypingDelay'], (result) => {
+            minTypingDelay = typeof result.minTypingDelay === 'number' ? result.minTypingDelay : 30;
+            maxTypingDelay = typeof result.maxTypingDelay === 'number' ? result.maxTypingDelay : 120;
+            console.log('[PomPom] minTypingDelay (from storage):', minTypingDelay, 'maxTypingDelay (from storage):', maxTypingDelay);
+            typingText = text;
+            currentIndex = startIndex;
+            isTypingRequested = true; 
+            isTypingInProgress = true; 
+            sendTypingState(TYPING_STATE.TYPING);
+            console.log('Inject.js: Начинаем/Возобновляем печать с индекса', startIndex);
+            if (typingTimeoutId) {
+                clearTimeout(typingTimeoutId);
+            }
+            // Сброс состояния опечаток
+            typoPositions = pickTypoPositions(text);
+            typoCount = 0;
+            typoState = null;
+            typoChar = '';
+            typeCharacter(); 
+        });
+    } else {
+        minTypingDelay = 30;
+        maxTypingDelay = 120;
+        console.log('[PomPom] minTypingDelay (default):', minTypingDelay, 'maxTypingDelay (default):', maxTypingDelay);
+        typingText = text;
+        currentIndex = startIndex;
+        isTypingRequested = true; 
+        isTypingInProgress = true; 
+        sendTypingState(TYPING_STATE.TYPING);
+        console.log('Inject.js: Начинаем/Возобновляем печать с индекса', startIndex);
+        if (typingTimeoutId) {
+            clearTimeout(typingTimeoutId);
+        }
+        // Сброс состояния опечаток
+        typoPositions = pickTypoPositions(text);
+        typoCount = 0;
+        typoState = null;
+        typoChar = '';
+        typeCharacter(); 
     }
-    typeCharacter(); 
 }
 
 
@@ -233,13 +376,18 @@ window.addEventListener('message', (event) => {
         case 'POMPOM_START_TYPING':
             console.log('Inject.js: Получена команда START_TYPING. Текст:', event.data.text);
             if (event.data.text) {
-                
                 if (!isTypingInProgress) { 
-                     
                     if (typingText !== event.data.text) {
                         currentIndex = 0;
                     }
-                    startTyping(event.data.text, currentIndex);
+                    if (typeof event.data.minTypingDelay === 'number' && typeof event.data.maxTypingDelay === 'number') {
+                        minTypingDelay = event.data.minTypingDelay;
+                        maxTypingDelay = event.data.maxTypingDelay;
+                        console.log('[PomPom] minTypingDelay (from message):', minTypingDelay, 'maxTypingDelay (from message):', maxTypingDelay);
+                        startTyping(event.data.text, currentIndex, minTypingDelay, maxTypingDelay);
+                    } else {
+                        startTyping(event.data.text, currentIndex);
+                    }
                 } else {
                     console.log('Inject.js: Уже активно печатаем, игнорируем START_TYPING.');
                 }
