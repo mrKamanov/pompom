@@ -18,6 +18,8 @@
  * @version 1.0
  */
 
+import { sendAIMLAPIRequest } from './API/aimlapi.js';
+
 async function createContextMenu() {
   const settings = await chrome.storage.sync.get([
     'prompt1Title', 'prompt2Title', 'prompt3Title'
@@ -107,14 +109,13 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
       const selectedText = await getSelectedText(tab);
       console.log('Полученный выделенный текст:', selectedText);
       if (!selectedText || selectedText.trim() === '') {
-        console.log('Текст не выделен или пустой');
         await sendMessageToTab(tab, {
           action: "showResult",
           result: "Пожалуйста, выделите текст перед использованием расширения."
         });
         return;
       }
-      const settings = await chrome.storage.sync.get(['prompt1', 'prompt2', 'prompt3', 'apiKey']);
+      const settings = await chrome.storage.sync.get(['prompt1', 'prompt2', 'prompt3', 'apiKey', 'aimlapi_model']);
       if (!settings.apiKey) {
         await sendMessageToTab(tab, {
           action: "showResult",
@@ -137,56 +138,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
         });
         return;
       }
-      const combinedText = `Инструкция: ${prompt}\n\nЗадача: ${selectedText}`;
-      console.log('Отправляемый текст:', combinedText);
-      const requestBody = {
-        model: "google/gemma-3-27b-it",
-        messages: [
-          {
-            role: "user",
-            content: combinedText
-          }
-        ],
-        temperature: 0.7,
-        top_p: 0.7,
-        frequency_penalty: 1,
-        max_output_tokens: 512,
-        top_k: 50
-      };
-      console.log('Отправляемый запрос:', JSON.stringify(requestBody, null, 2));
-      const response = await fetch('https://api.aimlapi.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${settings.apiKey}`
-        },
-        body: JSON.stringify(requestBody)
-      });
-      console.log('Response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-      const responseText = await response.text();
-      console.log('Raw response:', responseText);
-      let data;
-      try {
-        data = JSON.parse(responseText);
-        console.log('Parsed response:', JSON.stringify(data, null, 2));
-      } catch (e) {
-        console.error('Error parsing response:', e);
-        throw new Error(`Ошибка при разборе ответа от API: ${e.message}`);
-      }
-      if (response.status !== 200 && response.status !== 201) {
-        const errorMessage = data.error?.message || data.error || 'Неизвестная ошибка';
-        console.error('API Error:', errorMessage);
-        throw new Error(`API вернул ошибку: ${response.status} - ${errorMessage}`);
-      }
-      if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
-        console.error('Неожиданный формат ответа:', data);
-        throw new Error(`Неожиданный формат ответа от API: ${JSON.stringify(data)}`);
-      }
-      const result = data.choices[0].message?.content;
-      if (!result) {
-        throw new Error(`Не удалось получить результат из ответа API: ${JSON.stringify(data)}`);
-      }
+      const result = await sendAIMLAPIRequest(tab, prompt, selectedText, settings.apiKey, settings.aimlapi_model);
       await sendMessageToTab(tab, {
         action: "showResult",
         result: result
@@ -205,7 +157,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
     if (message.action === 'chatMessage') {
         try {
-            const settings = await chrome.storage.sync.get(['prompt', 'apiKey']);
+            const settings = await chrome.storage.sync.get(['prompt', 'apiKey', 'aimlapi_model']);
             
             if (!settings.apiKey) {
                 await sendMessageToTab(sender.tab, {
@@ -230,40 +182,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
                 }
             ];
 
-            const requestBody = {
-                model: "google/gemma-3-27b-it",
-                messages: messages,
-                temperature: 0.7,
-                top_p: 0.7,
-                frequency_penalty: 1,
-                max_output_tokens: 512,
-                top_k: 50
-            };
-
-            const response = await fetch('https://api.aimlapi.com/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${settings.apiKey}`
-                },
-                body: JSON.stringify(requestBody)
-            });
-
-            const data = await response.json();
-
-            if (response.status !== 200 && response.status !== 201) {
-                const errorMessage = data.error?.message || data.error || 'Неизвестная ошибка';
-                throw new Error(`API вернул ошибку: ${response.status} - ${errorMessage}`);
-            }
-
-            if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
-                throw new Error(`Неожиданный формат ответа от API: ${JSON.stringify(data)}`);
-            }
-
-            const result = data.choices[0].message?.content;
-            if (!result) {
-                throw new Error(`Не удалось получить результат из ответа API: ${JSON.stringify(data)}`);
-            }
+            const result = await sendAIMLAPIRequest(sender.tab, prompt, message.message, settings.apiKey, settings.aimlapi_model);
 
             await sendMessageToTab(sender.tab, {
                 action: "chatResponse",
@@ -289,7 +208,7 @@ async function processSelectedTextWithPrompt(tab, promptIndex) {
     return;
   }
   const settings = await chrome.storage.sync.get([
-    'prompt1', 'prompt2', 'prompt3', 'apiKey'
+    'prompt1', 'prompt2', 'prompt3', 'apiKey', 'aimlapi_model'
   ]);
   if (!settings.apiKey) {
     await sendMessageToTab(tab, {
@@ -309,67 +228,18 @@ async function processSelectedTextWithPrompt(tab, promptIndex) {
     });
     return;
   }
-  const combinedText = `Инструкция: ${prompt}\n\nЗадача: ${selectedText}`;
-  const requestBody = {
-    model: "google/gemma-3-27b-it",
-    messages: [
-      {
-        role: "user",
-        content: combinedText
-      }
-    ],
-    temperature: 0.7,
-    top_p: 0.7,
-    frequency_penalty: 1,
-    max_output_tokens: 512,
-    top_k: 50
-  };
-  const response = await fetch('https://api.aimlapi.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${settings.apiKey}`
-    },
-    body: JSON.stringify(requestBody)
-  });
-  const responseText = await response.text();
-  let data;
   try {
-    data = JSON.parse(responseText);
-  } catch (e) {
+    const result = await sendAIMLAPIRequest(tab, prompt, selectedText, settings.apiKey, settings.aimlapi_model);
     await sendMessageToTab(tab, {
       action: "showResult",
-      result: `Ошибка при разборе ответа от API: ${e.message}`
+      result: result
     });
-    return;
-  }
-  if (response.status !== 200 && response.status !== 201) {
-    const errorMessage = data.error?.message || data.error || 'Неизвестная ошибка';
+  } catch (error) {
     await sendMessageToTab(tab, {
       action: "showResult",
-      result: `API вернул ошибку: ${response.status} - ${errorMessage}`
+      result: `Произошла ошибка при обработке запроса: ${error.message}`
     });
-    return;
   }
-  if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
-    await sendMessageToTab(tab, {
-      action: "showResult",
-      result: `Неожиданный формат ответа от API: ${JSON.stringify(data)}`
-    });
-    return;
-  }
-  const result = data.choices[0].message?.content;
-  if (!result) {
-    await sendMessageToTab(tab, {
-      action: "showResult",
-      result: `Не удалось получить результат из ответа API: ${JSON.stringify(data)}`
-    });
-    return;
-  }
-  await sendMessageToTab(tab, {
-    action: "showResult",
-    result: result
-  });
 }
 
 chrome.commands.onCommand.addListener(async (command, tab) => {
@@ -381,7 +251,6 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
   } else if (command === 'prompt3_shortcut') {
     await processSelectedTextWithPrompt(tab, 3);
   } else if (command === 'print_shortcut') {
-    // Отправляем команду автопечати в content.js
     await chrome.tabs.sendMessage(tab.id, { action: 'startAutoPrint' });
   }
-}); 
+});

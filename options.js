@@ -23,7 +23,8 @@ document.addEventListener('DOMContentLoaded', () => {
   chrome.storage.sync.get([
     'prompt1', 'prompt2', 'prompt3',
     'prompt1Title', 'prompt2Title', 'prompt3Title',
-    'apiKey', 'minTypingDelay', 'maxTypingDelay'], (result) => {
+    'apiKey', 'minTypingDelay', 'maxTypingDelay',
+    'aimlapi_model'], (result) => {
     if (result.prompt1Title) document.getElementById('prompt1Title').value = result.prompt1Title;
     if (result.prompt2Title) document.getElementById('prompt2Title').value = result.prompt2Title;
     if (result.prompt3Title) document.getElementById('prompt3Title').value = result.prompt3Title;
@@ -33,44 +34,34 @@ document.addEventListener('DOMContentLoaded', () => {
     if (result.apiKey) document.getElementById('apiKey').value = result.apiKey;
     if (result.minTypingDelay !== undefined) document.getElementById('minTypingDelay').value = result.minTypingDelay;
     if (result.maxTypingDelay !== undefined) document.getElementById('maxTypingDelay').value = result.maxTypingDelay;
+    if (result.aimlapi_model) document.getElementById('aimlapi_model').value = result.aimlapi_model;
   });
 
   
   setupApiKeyToggle();
+
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+      this.classList.add('active');
+      document.getElementById('tab-' + this.dataset.tab).classList.add('active');
+    });
+  });
 });
 
 
 function setupApiKeyToggle() {
   const apiKeyInput = document.getElementById('apiKey');
-  const toggleButton = document.getElementById('togglePassword');
-  
-  if (!apiKeyInput || !toggleButton) return;
-
-  toggleButton.addEventListener('click', () => {
-    const isPassword = apiKeyInput.type === 'password';
-    
-    
-    apiKeyInput.type = isPassword ? 'text' : 'password';
-    
-    
-    if (isPassword) {
-      
-      toggleButton.innerHTML = `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-          <line x1="1" y1="1" x2="23" y2="23"></line>
-        </svg>
-      `;
-      toggleButton.title = 'Скрыть API ключ';
+  const toggleBtn = document.getElementById('togglePassword');
+  if (!apiKeyInput || !toggleBtn) return;
+  toggleBtn.addEventListener('click', function() {
+    if (apiKeyInput.type === 'password') {
+      apiKeyInput.type = 'text';
+      toggleBtn.setAttribute('aria-label', 'Скрыть API ключ');
     } else {
-      
-      toggleButton.innerHTML = `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-          <circle cx="12" cy="12" r="3"></circle>
-        </svg>
-      `;
-      toggleButton.title = 'Показать API ключ';
+      apiKeyInput.type = 'password';
+      toggleBtn.setAttribute('aria-label', 'Показать API ключ');
     }
   });
 }
@@ -85,6 +76,7 @@ document.getElementById('saveButton').addEventListener('click', () => {
   const apiKey = document.getElementById('apiKey').value;
   const minTypingDelay = parseInt(document.getElementById('minTypingDelay').value, 10);
   const maxTypingDelay = parseInt(document.getElementById('maxTypingDelay').value, 10);
+  const aimlapi_model = document.getElementById('aimlapi_model').value;
   const status = document.getElementById('status');
 
   if (!prompt1 || !prompt2 || !prompt3 || !apiKey) {
@@ -103,7 +95,8 @@ document.getElementById('saveButton').addEventListener('click', () => {
     prompt1, prompt2, prompt3,
     apiKey,
     minTypingDelay,
-    maxTypingDelay
+    maxTypingDelay,
+    aimlapi_model
   }, () => {
     status.textContent = 'Настройки сохранены';
     status.className = 'status success';

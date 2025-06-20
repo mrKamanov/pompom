@@ -1,378 +1,241 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
   <title>Настройки PomPom</title>
+  <link rel="stylesheet" href="styles.css">
   <style>
-    * {
+    :root {
+      --brand-main: #6c47ff;
+      --brand-accent: #ffb300;
+      --brand-bg: #f7f6fd;
+      --brand-block: #fff;
+      --brand-border: #e0d7fa;
+      --brand-text: #222;
+      --brand-muted: #888;
+    }
+    body {
+      background: var(--brand-bg);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      color: var(--brand-text);
       margin: 0;
       padding: 0;
-      box-sizing: border-box;
     }
-
-    body {
-      width: 100%;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      color: #333;
+    .settings-container {
+      max-width: 520px;
+      margin: 32px auto;
+      background: var(--brand-block);
+      border-radius: 18px;
+      box-shadow: 0 4px 24px #6c47ff22;
+      padding: 0 0 24px 0;
+      border: 1.5px solid var(--brand-border);
     }
-
-    .container {
-      background: white;
-      border-radius: 20px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
-      margin-bottom: 20px;
-    }
-
-    .header {
-      background: linear-gradient(135deg, #af4c4c 0%, #d2dfdb 100%);
-      padding: 30px;
-      text-align: center;
-      color: white;
-    }
-
-    .header h1 {
-      font-size: 2.5em;
-      margin-bottom: 10px;
-      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-    }
-
-    .header .version {
-      font-size: 1.1em;
-      opacity: 0.9;
-      font-weight: 300;
-    }
-
-    .content {
-      padding: 40px;
-    }
-
-    .form-group {
-      margin-bottom: 30px;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 10px;
-      font-weight: 600;
-      font-size: 1.1em;
-      color: #555;
-    }
-
-    textarea, input[type="text"], input[type="password"] {
-      width: 100%;
-      padding: 15px;
-      border: 2px solid #e1e5e9;
-      border-radius: 12px;
-      font-size: 16px;
-      transition: all 0.3s ease;
-      background: #f8f9fa;
-    }
-
-    textarea:focus, input[type="text"]:focus, input[type="password"]:focus {
-      outline: none;
-      border-color: #af4c4c;
-      background: white;
-      box-shadow: 0 0 0 3px rgba(175, 76, 76, 0.1);
-    }
-
-    textarea {
-      height: 120px;
-      resize: vertical;
-      font-family: inherit;
-    }
-
-    .api-key-container {
-      position: relative;
+    .settings-header {
       display: flex;
       align-items: center;
+      padding: 24px 32px 16px 32px;
     }
-
-    .api-key-input {
+    .settings-logo {
+      width: 48px;
+      height: 48px;
+      margin-right: 16px;
+    }
+    .tabs {
+      display: flex;
+      border-bottom: 2px solid var(--brand-border);
+      background: var(--brand-block);
+      border-radius: 18px 18px 0 0;
+      overflow: hidden;
+    }
+    .tab {
       flex: 1;
-      padding-right: 50px;
-    }
-
-    .toggle-password {
-      position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
+      text-align: center;
+      padding: 18px 0 12px 0;
+      font-size: 1.13em;
+      font-weight: 500;
+      color: var(--brand-muted);
       background: none;
       border: none;
+      outline: none;
       cursor: pointer;
-      padding: 8px;
-      border-radius: 8px;
-      color: #666;
-      transition: all 0.3s ease;
+      transition: color 0.2s, background 0.2s;
+      position: relative;
     }
-
-    .toggle-password:hover {
-      background-color: #e9ecef;
-      color: #333;
-      transform: translateY(-50%) scale(1.1);
+    .tab.active {
+      color: var(--brand-main);
+      background: #f3f0ff;
+      border-bottom: 2.5px solid var(--brand-main);
+      z-index: 2;
     }
-
-    .toggle-password svg {
-      width: 20px;
-      height: 20px;
+    .tab .tab-emoji {
+      font-size: 1.2em;
+      margin-right: 6px;
     }
-
-    .save-button {
-      background: linear-gradient(135deg, #af4c4c 0%, #d2dfdb 100%);
-      color: white;
-      padding: 15px 30px;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      font-size: 18px;
-      font-weight: 600;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 15px rgba(175, 76, 76, 0.3);
-    }
-
-    .save-button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(175, 76, 76, 0.4);
-    }
-
-    .save-button:active {
-      transform: translateY(0);
-    }
-
-    .status {
-      margin-top: 20px;
-      padding: 15px;
-      border-radius: 12px;
+    .tab-content {
       display: none;
+      padding: 28px 32px 0 32px;
+      animation: fadeIn 0.3s;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .form-group {
+      margin-bottom: 22px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
       font-weight: 500;
     }
-
-    .status.success {
-      background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-      color: #155724;
-      border: 1px solid #c3e6cb;
+    .form-group input[type="text"],
+    .form-group input[type="number"] {
+      width: 100%;
+      padding: 8px 12px;
+      border-radius: 7px;
+      border: 1.5px solid var(--brand-border);
+      font-size: 1em;
+      background: #faf9ff;
+      color: var(--brand-text);
+      transition: border 0.2s;
+    }
+    .form-group input:focus {
+      border-color: var(--brand-main);
+      outline: none;
+    }
+    .hint {
+      font-size: 0.93em;
+      color: var(--brand-muted);
+      margin-top: 2px;
+    }
+    .save-button {
       display: block;
-    }
-
-    .status.error {
-      background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
-      color: #721c24;
-      border: 1px solid #f5c6cb;
-      display: block;
-    }
-
-    
-    .donations {
-      background: white;
-      border-radius: 20px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
-    }
-
-    .donations-header {
-      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-      padding: 25px;
-      text-align: center;
-      color: white;
-    }
-
-    .donations-header h2 {
-      font-size: 1.8em;
-      margin-bottom: 10px;
-      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
-    }
-
-    .donations-content {
-      padding: 30px;
-    }
-
-    .donation-item {
-      background: #f8f9fa;
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 20px;
-      border-left: 4px solid #28a745;
-      transition: all 0.3s ease;
-    }
-
-    .donation-item:hover {
-      transform: translateX(5px);
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    }
-
-    .donation-item:last-child {
-      margin-bottom: 0;
-    }
-
-    .crypto-name {
+      width: 90%;
+      margin: 32px auto 0 auto;
+      padding: 13px 0;
+      background: linear-gradient(90deg, var(--brand-main), var(--brand-accent));
+      color: #fff;
+      font-size: 1.13em;
       font-weight: 600;
-      font-size: 1.2em;
-      color: #28a745;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-    }
-
-    .crypto-name::before {
-      content: "💰";
-      margin-right: 10px;
-      font-size: 1.5em;
-    }
-
-    .crypto-address {
-      background: white;
-      border: 1px solid #dee2e6;
-      border-radius: 8px;
-      padding: 12px;
-      font-family: 'Courier New', monospace;
-      font-size: 14px;
-      color: #495057;
-      word-break: break-all;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .crypto-address:hover {
-      background: #e9ecef;
-      border-color: #28a745;
-    }
-
-    .copy-button {
-      background: #28a745;
-      color: white;
       border: none;
-      padding: 8px 15px;
-      border-radius: 6px;
+      border-radius: 9px;
+      box-shadow: 0 2px 8px #6c47ff22;
       cursor: pointer;
-      font-size: 12px;
-      margin-top: 10px;
-      transition: all 0.3s ease;
+      transition: background 0.2s, box-shadow 0.2s;
     }
-
-    .copy-button:hover {
-      background: #218838;
-      transform: scale(1.05);
+    .save-button:hover {
+      background: linear-gradient(90deg, var(--brand-accent), var(--brand-main));
+      box-shadow: 0 4px 16px #6c47ff33;
     }
-
-    .copy-button.copied {
-      background: #6c757d;
-    }
-
-    .footer {
+    #status {
       text-align: center;
-      padding: 20px;
-      color: white;
-      opacity: 0.8;
-      font-size: 14px;
+      margin-top: 16px;
+      color: var(--brand-main);
+      font-weight: 500;
+      min-height: 24px;
     }
-
-    .footer a {
-      color: white;
-      text-decoration: none;
-      font-weight: 600;
-    }
-
-    .footer a:hover {
-      text-decoration: underline;
-    }
-
-    
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .container, .donations {
-      animation: fadeIn 0.6s ease-out;
+    @media (max-width: 600px) {
+      .settings-container {
+        max-width: 98vw;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 0 0 16px 0;
+      }
+      .tab-content {
+        padding: 18px 8vw 0 8vw;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>🎯 PomPom</h1>
-      <div class="version">Версия 1.1 - Расширение для работы с AI</div>
+  <div class="settings-container">
+    <div class="settings-header">
+      <img src="icons/icon128.png" alt="PomPom" class="settings-logo">
+      <div>
+        <h1>Pompom</h1>
+        <div class="settings-desc">Мощное расширение для работы с AI прямо в браузере. Выделяйте текст, вызывайте контекстное меню или используйте горячие клавиши для быстрого взаимодействия с искусственным интеллектом.</div>
+      </div>
     </div>
-    
-    <div class="content">
-      <div class="form-group">
-        <label for="prompt1Title">Название промпта 1</label>
-        <input type="text" id="prompt1Title" placeholder="Например: Кратко" />
-        <label for="prompt1">Промпт 1</label>
-        <textarea id="prompt1" placeholder="Введите первый промпт..."></textarea>
-      </div>
-      <div class="form-group">
-        <label for="prompt2Title">Название промпта 2</label>
-        <input type="text" id="prompt2Title" placeholder="Например: Подробно" />
-        <label for="prompt2">Промпт 2</label>
-        <textarea id="prompt2" placeholder="Введите второй промпт..."></textarea>
-      </div>
-      <div class="form-group">
-        <label for="prompt3Title">Название промпта 3</label>
-        <input type="text" id="prompt3Title" placeholder="Например: Перевод" />
-        <label for="prompt3">Промпт 3</label>
-        <textarea id="prompt3" placeholder="Введите третий промпт..."></textarea>
-      </div>
-
-      <div class="form-group">
-        <label for="apiKey">🔑 API Key:</label>
-        <div class="api-key-container">
-          <input type="password" id="apiKey" class="api-key-input" placeholder="Введите ваш API Key...">
-          <button type="button" class="toggle-password" id="togglePassword" title="Показать/скрыть API ключ">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-              <circle cx="12" cy="12" r="3"></circle>
-            </svg>
-          </button>
+    <div class="tabs">
+      <button class="tab active" data-tab="general"><span class="tab-emoji">⚙️</span>Общие</button>
+      <button class="tab" data-tab="aimlapi"><span class="tab-emoji">🤖</span>AIMLAPI</button>
+      <button class="tab" data-tab="prompts"><span class="tab-emoji">💬</span>Промпты</button>
+    </div>
+    <form id="optionsForm">
+      <div class="tab-content active" id="tab-general">
+        <div class="tab-desc">Настройки автопечати и базовые параметры расширения.</div>
+        <div class="form-group">
+          <label for="minTypingDelay">Минимальный интервал автопечати (мс):</label>
+          <input type="number" id="minTypingDelay" min="1" max="10000" step="1" value="60">
+          <div class="hint">Чем меньше значение, тем быстрее будет имитироваться печать. Рекомендуется 30–200 мс.</div>
+        </div>
+        <div class="form-group">
+          <label for="maxTypingDelay">Максимальный интервал автопечати (мс):</label>
+          <input type="number" id="maxTypingDelay" min="1" max="10000" step="1" value="120">
+          <div class="hint">Интервал между символами выбирается случайно в диапазоне от минимального до максимального.</div>
+        </div>
+        <div class="form-group">
+          <span class="hint">Горячие клавиши можно назначить на странице <a href="chrome://extensions/shortcuts" target="_blank">chrome://extensions/shortcuts</a>.</span>
         </div>
       </div>
-
-      <div class="form-group">
-        <label for="minTypingDelay">Минимальный интервал печати (мс)</label>
-        <input type="number" id="minTypingDelay" min="1" max="10000" step="1" value="30">
+      <div class="tab-content" id="tab-aimlapi">
+        <div class="tab-desc">Настройки подключения к сервису <b>AIMLAPI.com</b> для генерации ответов с помощью искусственного интеллекта.</div>
+        <div class="form-group">
+          <label for="apiKey">API Key:</label>
+          <div class="api-key-container">
+            <input type="password" id="apiKey" placeholder="Введите ваш API ключ">
+            <button type="button" class="toggle-password" id="togglePassword" title="Показать/скрыть API ключ">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </button>
+          </div>
+          <div class="hint">Получить ключ можно на <a href="https://aimlapi.com" target="_blank">AIMLAPI.com</a> после регистрации.</div>
+        </div>
+        <div class="form-group">
+          <label for="aimlapi_model">Модель AIMLAPI:</label>
+          <input type="text" id="aimlapi_model" placeholder="google/gemma-3-27b-it">
+          <div class="hint">Укажите имя модели (например, <b>google/gemma-3-27b-it</b>). Если оставить пустым — будет использоваться модель по умолчанию.<br>Список моделей смотрите на <a href="https://aimlapi.com/models" target="_blank">странице моделей</a>.</div>
+        </div>
       </div>
-      <div class="form-group">
-        <label for="maxTypingDelay">Максимальный интервал печати (мс)</label>
-        <input type="number" id="maxTypingDelay" min="1" max="10000" step="1" value="120">
+      <div class="tab-content" id="tab-prompts">
+        <div class="tab-desc">Настройте свои промпты — шаблоны запросов к AI. Можно задать название и текст для каждого промпта. Названия будут отображаться в контекстном меню и при выборе горячих клавиш.</div>
+        <div class="form-group">
+          <label for="prompt1Title">Название промпта 1:</label>
+          <input type="text" id="prompt1Title" placeholder="Например: Кратко 🟢">
+          <div class="hint">Это имя будет видно в меню и при выборе горячей клавиши.</div>
+        </div>
+        <div class="form-group">
+          <label for="prompt1">Промпт 1:</label>
+          <input type="text" id="prompt1" placeholder="Текст промпта 1">
+          <div class="hint">Например: "Сделай краткое резюме выделенного текста".</div>
+        </div>
+        <div class="form-group">
+          <label for="prompt2Title">Название промпта 2:</label>
+          <input type="text" id="prompt2Title" placeholder="Например: Подробно 🔵">
+          <div class="hint">Можно использовать эмодзи для наглядности.</div>
+        </div>
+        <div class="form-group">
+          <label for="prompt2">Промпт 2:</label>
+          <input type="text" id="prompt2" placeholder="Текст промпта 2">
+          <div class="hint">Например: "Объясни подробно, как работает этот код".</div>
+        </div>
+        <div class="form-group">
+          <label for="prompt3Title">Название промпта 3:</label>
+          <input type="text" id="prompt3Title" placeholder="Например: Код 🟣">
+          <div class="hint">Используйте короткие и понятные названия.</div>
+        </div>
+        <div class="form-group">
+          <label for="prompt3">Промпт 3:</label>
+          <input type="text" id="prompt3" placeholder="Текст промпта 3">
+          <div class="hint">Например: "Исправь ошибки в коде и объясни их".</div>
+        </div>
       </div>
-
       <button class="save-button" id="saveButton">💾 Сохранить настройки</button>
-      <div id="status" class="status"></div>
-    </div>
+      <div id="status"></div>
+    </form>
   </div>
-
-  <div class="donations">
-    <div class="donations-header">
-      <h2>❤️ Поддержать автора</h2>
-      <p>Если расширение помогло вам, можете отблагодарить автора</p>
-    </div>
-    
-    <div class="donations-content">
-      <div class="donation-item">
-        <div class="crypto-name">Toncoin (TON)</div>
-        <div class="crypto-address" id="tonAddress">UQB2pUhI3rUKiy-hR3mHMAcXvQ4_QNVGDEuFZcRU9qa7MMeA</div>
-        <button class="copy-button" onclick="copyToClipboard('tonAddress')">📋 Копировать адрес</button>
-      </div>
-
-      <div class="donation-item">
-        <div class="crypto-name">Bitcoin (BTC)</div>
-        <div class="crypto-address" id="btcAddress">19i9JauVSyDzv9KNDKV1Da9v36GwiZ6at3</div>
-        <button class="copy-button" onclick="copyToClipboard('btcAddress')">📋 Копировать адрес</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="footer">
-    <p>Сделано с ❤️ Сергеем Камановым | <a href="https://github.com/mrKamanov/pompom" target="_blank">GitHub</a></p>
-  </div>
-
   <script src="options.js"></script>
-  <script src="donations.js"></script>
 </body>
 </html> 

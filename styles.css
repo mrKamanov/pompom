@@ -402,3 +402,166 @@
     background-color: #fffbe7;
     border-color: #f3e9c7;
 }
+
+/* Фирменные цвета и кастомные стили для PomPom Options */
+:root {
+  --brand-main: #6c47ff;
+  --brand-accent: #ffb300;
+  --brand-bg: #f7f6fd;
+  --brand-block: #fff;
+  --brand-border: #e0d7fa;
+  --brand-text: #222;
+  --brand-muted: #888;
+}
+body {
+  background: var(--brand-bg);
+  font-family: 'Segoe UI', Arial, sans-serif;
+  color: var(--brand-text);
+  margin: 0;
+  padding: 0;
+}
+.settings-container {
+  max-width: 520px;
+  margin: 32px auto;
+  background: var(--brand-block);
+  border-radius: 18px;
+  box-shadow: 0 4px 24px #6c47ff22;
+  padding: 0 0 24px 0;
+  border: 1.5px solid var(--brand-border);
+}
+.tabs {
+  display: flex;
+  border-bottom: 2px solid var(--brand-border);
+  background: var(--brand-block);
+  border-radius: 18px 18px 0 0;
+  overflow: hidden;
+}
+.tab {
+  flex: 1;
+  text-align: center;
+  padding: 18px 0 12px 0;
+  font-size: 1.13em;
+  font-weight: 500;
+  color: var(--brand-muted);
+  background: none;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+  position: relative;
+}
+.tab.active {
+  color: var(--brand-main);
+  background: #f3f0ff;
+  border-bottom: 2.5px solid var(--brand-main);
+  z-index: 2;
+}
+.tab .tab-emoji {
+  font-size: 1.2em;
+  margin-right: 6px;
+}
+.tab-content {
+  display: none;
+  padding: 28px 32px 0 32px;
+  animation: fadeIn 0.3s;
+}
+.tab-content.active {
+  display: block;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.form-group {
+  margin-bottom: 22px;
+}
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+.form-group input[type="text"],
+.form-group input[type="number"] {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 7px;
+  border: 1.5px solid var(--brand-border);
+  font-size: 1em;
+  background: #faf9ff;
+  color: var(--brand-text);
+  transition: border 0.2s;
+}
+.form-group input:focus {
+  border-color: var(--brand-main);
+  outline: none;
+}
+.hint {
+  font-size: 0.93em;
+  color: var(--brand-muted);
+  margin-top: 2px;
+}
+.save-button {
+  display: block;
+  width: 90%;
+  margin: 32px auto 0 auto;
+  padding: 13px 0;
+  background: linear-gradient(90deg, var(--brand-main), var(--brand-accent));
+  color: #fff;
+  font-size: 1.13em;
+  font-weight: 600;
+  border: none;
+  border-radius: 9px;
+  box-shadow: 0 2px 8px #6c47ff22;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.save-button:hover {
+  background: linear-gradient(90deg, var(--brand-accent), var(--brand-main));
+  box-shadow: 0 4px 16px #6c47ff33;
+}
+#status {
+  text-align: center;
+  margin-top: 16px;
+  color: var(--brand-main);
+  font-weight: 500;
+  min-height: 24px;
+}
+@media (max-width: 600px) {
+  .settings-container {
+    max-width: 98vw;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0 0 16px 0;
+  }
+  .tab-content {
+    padding: 18px 8vw 0 8vw;
+  }
+}
+
+.api-key-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.api-key-container input[type="password"],
+.api-key-container input[type="text"] {
+  flex: 1;
+  padding-right: 44px;
+}
+.toggle-password {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: var(--brand-muted);
+  transition: color 0.2s;
+  border-radius: 50%;
+}
+.toggle-password:hover {
+  color: var(--brand-main);
+  background: #f3f0ff;
+}
