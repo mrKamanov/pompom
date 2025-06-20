@@ -47,5 +47,19 @@
       ],
       "matches": ["<all_urls>"]
     }
-  ]
+  ],
+  "commands": {
+    "prompt1_shortcut": {
+      "description": "Обработать выделенный текст с промптом 1"
+    },
+    "prompt2_shortcut": {
+      "description": "Обработать выделенный текст с промптом 2"
+    },
+    "prompt3_shortcut": {
+      "description": "Обработать выделенный текст с промптом 3"
+    },
+    "print_shortcut": {
+      "description": "Запустить автопечать (имитация печати ответа на странице)"
+    }
+  }
 }

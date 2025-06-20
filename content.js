@@ -504,6 +504,26 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             
             setupTypeButton(newTypeButton);
         }
+    } else if (message.action === 'startAutoPrint') {
+        if (lastApiResult) {
+            if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
+                chrome.storage.sync.get(['minTypingDelay', 'maxTypingDelay'], (result) => {
+                    window.postMessage({
+                        type: 'POMPOM_START_TYPING',
+                        text: lastApiResult,
+                        minTypingDelay: result.minTypingDelay,
+                        maxTypingDelay: result.maxTypingDelay
+                    }, '*');
+                });
+            } else {
+                window.postMessage({
+                    type: 'POMPOM_START_TYPING',
+                    text: lastApiResult
+                }, '*');
+            }
+        } else {
+            alert('Нет текста для автопечати. Сначала получите ответ от AI.');
+        }
     }
 });
 

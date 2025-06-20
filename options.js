@@ -20,20 +20,19 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  
-  chrome.storage.sync.get(['prompt', 'apiKey', 'minTypingDelay', 'maxTypingDelay'], (result) => {
-    if (result.prompt) {
-      document.getElementById('prompt').value = result.prompt;
-    }
-    if (result.apiKey) {
-      document.getElementById('apiKey').value = result.apiKey;
-    }
-    if (result.minTypingDelay !== undefined) {
-      document.getElementById('minTypingDelay').value = result.minTypingDelay;
-    }
-    if (result.maxTypingDelay !== undefined) {
-      document.getElementById('maxTypingDelay').value = result.maxTypingDelay;
-    }
+  chrome.storage.sync.get([
+    'prompt1', 'prompt2', 'prompt3',
+    'prompt1Title', 'prompt2Title', 'prompt3Title',
+    'apiKey', 'minTypingDelay', 'maxTypingDelay'], (result) => {
+    if (result.prompt1Title) document.getElementById('prompt1Title').value = result.prompt1Title;
+    if (result.prompt2Title) document.getElementById('prompt2Title').value = result.prompt2Title;
+    if (result.prompt3Title) document.getElementById('prompt3Title').value = result.prompt3Title;
+    if (result.prompt1) document.getElementById('prompt1').value = result.prompt1;
+    if (result.prompt2) document.getElementById('prompt2').value = result.prompt2;
+    if (result.prompt3) document.getElementById('prompt3').value = result.prompt3;
+    if (result.apiKey) document.getElementById('apiKey').value = result.apiKey;
+    if (result.minTypingDelay !== undefined) document.getElementById('minTypingDelay').value = result.minTypingDelay;
+    if (result.maxTypingDelay !== undefined) document.getElementById('maxTypingDelay').value = result.maxTypingDelay;
   });
 
   
@@ -77,13 +76,18 @@ function setupApiKeyToggle() {
 }
 
 document.getElementById('saveButton').addEventListener('click', () => {
-  const prompt = document.getElementById('prompt').value;
+  const prompt1Title = document.getElementById('prompt1Title').value;
+  const prompt2Title = document.getElementById('prompt2Title').value;
+  const prompt3Title = document.getElementById('prompt3Title').value;
+  const prompt1 = document.getElementById('prompt1').value;
+  const prompt2 = document.getElementById('prompt2').value;
+  const prompt3 = document.getElementById('prompt3').value;
   const apiKey = document.getElementById('apiKey').value;
   const minTypingDelay = parseInt(document.getElementById('minTypingDelay').value, 10);
   const maxTypingDelay = parseInt(document.getElementById('maxTypingDelay').value, 10);
   const status = document.getElementById('status');
 
-  if (!prompt || !apiKey) {
+  if (!prompt1 || !prompt2 || !prompt3 || !apiKey) {
     status.textContent = 'Пожалуйста, заполните все поля';
     status.className = 'status error';
     return;
@@ -95,10 +99,11 @@ document.getElementById('saveButton').addEventListener('click', () => {
   }
 
   chrome.storage.sync.set({
-    prompt: prompt,
-    apiKey: apiKey,
-    minTypingDelay: minTypingDelay,
-    maxTypingDelay: maxTypingDelay
+    prompt1Title, prompt2Title, prompt3Title,
+    prompt1, prompt2, prompt3,
+    apiKey,
+    minTypingDelay,
+    maxTypingDelay
   }, () => {
     status.textContent = 'Настройки сохранены';
     status.className = 'status success';
