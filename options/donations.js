@@ -10,7 +10,6 @@
  * @version 1.1
  */
 
-// Функция копирования адресов в буфер обмена
 function copyToClipboard(elementId) {
   const element = document.getElementById(elementId);
   const text = element.textContent;

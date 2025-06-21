@@ -17,7 +17,7 @@
  * - Управление состоянием расширения через chrome.storage
  * 
  * @author Сергей Каманов
- * @version 1.0
+ * @version 1.12
  */
 
 import { sendAIMLAPIRequest } from './API/aimlapi.js';

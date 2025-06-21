@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "PomPom",
-  "version": "1.11",
+  "version": "1.13",
   "description": "Расширение для обработки текста через API",
   "permissions": [
     "contextMenus",
@@ -33,7 +33,7 @@
       ]
     }
   ],
-  "options_page": "options.html",
+  "options_page": "options/options.html",
   "icons": {
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
@@ -42,7 +42,7 @@
     {
       "resources": [
         "inject.js", 
-        "donations.js",
+        "options/donations.js",
         "lib/*.js",         
         "lib/styles/*.css"  
       ],

@@ -27,13 +27,13 @@ let isTypingInProgress = false;
 let minTypingDelay = 30;
 let maxTypingDelay = 120;
 
-// --- ДОБАВЛЯЕМ МЕХАНИКУ ОПЕЧАТОК ---
+
 let typoPositions = [];
 let typoCount = 0;
-let typoState = null; // null | 'typo' | 'backspace' | 'correction'
+let typoState = null; 
 let typoChar = '';
 
-// Карта соседей по клавиатуре (латиница + цифры, можно расширить)
+
 const keyboardNeighbors = {
     'q': ['w', 'a'], 'w': ['q', 'e', 's'], 'e': ['w', 'r', 'd'], 'r': ['e', 't', 'f'], 't': ['r', 'y', 'g'],
     'y': ['t', 'u', 'h'], 'u': ['y', 'i', 'j'], 'i': ['u', 'o', 'k'], 'o': ['i', 'p', 'l'], 'p': ['o', 'l'],
@@ -58,11 +58,11 @@ function pickTypoPositions(text) {
     const positions = [];
     let tries = 0;
     while (positions.length < 3 && tries < 100) {
-        const pos = Math.floor(Math.random() * (text.length - 1)) + 1; // не первая буква
+        const pos = Math.floor(Math.random() * (text.length - 1)) + 1; 
         const char = text[pos];
         if (
             !positions.includes(pos) &&
-            /[a-zA-Zа-яА-Я0-9]/.test(char) && // только буквы и цифры
+            /[a-zA-Zа-яА-Я0-9]/.test(char) && 
             char !== ' ' &&
             !'.,!?;:'.includes(char)
         ) {
@@ -127,21 +127,21 @@ function typeCharacter() {
         return;
     }
 
-    // --- ОПЕЧАТКИ ---
+    
     if (typoState === 'typo') {
-        // Вставляем ошибочный символ
+        
         insertChar(typoChar);
         typoState = 'backspace';
-        typingTimeoutId = setTimeout(typeCharacter, 120 + Math.random() * 100); // небольшая пауза
+        typingTimeoutId = setTimeout(typeCharacter, 120 + Math.random() * 100); 
         return;
     } else if (typoState === 'backspace') {
-        // Симулируем Backspace
+        
         removeLastChar();
         typoState = 'correction';
         typingTimeoutId = setTimeout(typeCharacter, 120 + Math.random() * 100);
         return;
     } else if (typoState === 'correction') {
-        // Вставляем правильный символ
+        
         insertChar(typingText[currentIndex]);
         typoState = null;
         currentIndex++;
@@ -149,7 +149,7 @@ function typeCharacter() {
         typingTimeoutId = setTimeout(typeCharacter, delay);
         return;
     }
-    // --- Обычная печать ---
+    
     if (
         typoCount < 3 &&
         typoPositions.includes(currentIndex) &&
@@ -164,7 +164,7 @@ function typeCharacter() {
             return;
         }
     }
-    // Обычная печать
+    
     insertChar(typingText[currentIndex]);
     currentIndex++;
     let delay = Math.random() * (maxTypingDelay - minTypingDelay) + minTypingDelay;
@@ -246,7 +246,7 @@ function startTyping(text, startIndex = 0, customMinDelay, customMaxDelay) {
         if (typingTimeoutId) {
             clearTimeout(typingTimeoutId);
         }
-        // Сброс состояния опечаток
+        
         typoPositions = pickTypoPositions(text);
         typoCount = 0;
         typoState = null;
@@ -266,7 +266,7 @@ function startTyping(text, startIndex = 0, customMinDelay, customMaxDelay) {
             if (typingTimeoutId) {
                 clearTimeout(typingTimeoutId);
             }
-            // Сброс состояния опечаток
+            
             typoPositions = pickTypoPositions(text);
             typoCount = 0;
             typoState = null;
@@ -286,7 +286,7 @@ function startTyping(text, startIndex = 0, customMinDelay, customMaxDelay) {
         if (typingTimeoutId) {
             clearTimeout(typingTimeoutId);
         }
-        // Сброс состояния опечаток
+        
         typoPositions = pickTypoPositions(text);
         typoCount = 0;
         typoState = null;

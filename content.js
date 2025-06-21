@@ -154,7 +154,7 @@ function createPopup() {
       </div>
     `;
 
-    // Добавляем белый фон для контента
+    
     const content = popup.querySelector('.pompom-popup-content');
     content.style.background = '#fafdff';
     content.style.position = 'relative';

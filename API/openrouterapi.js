@@ -56,9 +56,9 @@ async function sendToOpenRouter(prompt, apiKey, options = {}) {
     } catch (e) {
         throw new Error(`Ошибка при разборе ответа от OpenRouter: ${e.message}`);
     }
-    // Ожидается, что ответ содержит data.choices[0].message.content
+    
     return data.choices?.[0]?.message?.content || '';
 }
 
-// Экспортируем функцию
+
 export { sendToOpenRouter }; 

@@ -1,24 +1,4 @@
-// PomPom options.js — версия 1.12
-/**
- * options.js - Скрипт страницы настроек расширения PomPom
- * 
- * Этот файл отвечает за:
- * 1. Управление настройками расширения через пользовательский интерфейс
- * 2. Сохранение и загрузку настроек в chrome.storage
- * 3. Валидацию введенных данных
- * 4. Отображение статуса сохранения настроек
- * 5. Маскировку API ключа с возможностью показа/скрытия
- * 
- * Основные функции:
- * - Загрузка сохраненных настроек при открытии страницы
- * - Сохранение API ключа и пользовательского промпта
- * - Валидация обязательных полей
- * - Отображение уведомлений о статусе сохранения
- * - Переключение видимости API ключа
- * 
- * @author Сергей Каманов
- * @version 1.1
- */
+// PomPom options.js — версия 1.13
 
 document.addEventListener('DOMContentLoaded', () => {
   chrome.storage.sync.get([
@@ -44,17 +24,25 @@ document.addEventListener('DOMContentLoaded', () => {
     if (result.openrouter_model) document.getElementById('openrouter_model').value = result.openrouter_model;
   });
 
-  
   setupApiKeyToggle();
 
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', function() {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
-      this.classList.add('active');
-      document.getElementById('tab-' + this.dataset.tab).classList.add('active');
+  const sidebarCards = document.querySelectorAll('.sidebar-card');
+  const tabContents = document.querySelectorAll('.tab-content');
+  function activateSection(section) {
+    sidebarCards.forEach(card => {
+      card.classList.toggle('active', card.getAttribute('data-section') === section);
+    });
+    tabContents.forEach(tc => {
+      tc.classList.toggle('active', tc.id === 'tab-' + section);
+    });
+  }
+  sidebarCards.forEach(card => {
+    card.addEventListener('click', function() {
+      const section = this.getAttribute('data-section');
+      activateSection(section);
     });
   });
+  activateSection('general');
 });
 
 
@@ -72,7 +60,6 @@ function setupApiKeyToggle() {
       }
     });
   }
-  // Для OpenRouter
   const openrouterApiKeyInput = document.getElementById('openrouter_apiKey');
   const toggleOpenRouterBtn = document.getElementById('toggleOpenRouterPassword');
   if (openrouterApiKeyInput && toggleOpenRouterBtn) {

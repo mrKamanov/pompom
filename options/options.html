@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Настройки PomPom</title>
+  <link rel="stylesheet" href="options.css">
+  
+  
+</head>
+<body>
+  <div class="settings-layout">
+    <nav class="sidebar">
+      <div class="sidebar-card card-blue" data-section="general">
+        <div class="card-icon">🛠️</div>
+        <div class="card-title">Общие</div>
+      </div>
+      <div class="sidebar-card card-yellow" data-section="aimlapi">
+        <div class="card-icon">🧠</div>
+        <div class="card-title">AIMLAPI</div>
+      </div>
+      <div class="sidebar-card card-green" data-section="prompts">
+        <div class="card-icon">📝</div>
+        <div class="card-title">Промпты</div>
+      </div>
+      <div class="sidebar-card card-red" data-section="openrouter">
+        <div class="card-icon">🌐</div>
+        <div class="card-title">OpenRouter</div>
+      </div>
+    </nav>
+    <main class="main-content">
+      <div class="settings-header">
+        <img src="../icons/icon128.png" alt="PomPom" class="settings-logo">
+        <div>
+          <h1 class="main-title">PomPom — расширение для работы с AI</h1>
+          <div class="settings-desc">Умное расширение для браузера, которое помогает быстро взаимодействовать с искусственным интеллектом: выделяйте текст, используйте горячие клавиши и получайте ответы прямо на странице.</div>
+        </div>
+      </div>
+      <form id="optionsForm">
+        <div class="tab-content" id="tab-general">
+          <div class="card card-blue">
+            <div class="card-icon">🛠️</div>
+            <div class="card-content">
+              <div class="tab-desc">
+                <b>Общие настройки</b><br>
+                Здесь вы можете задать основные параметры работы расширения: скорость автопечати, выбор провайдера AI и другие базовые опции.<br>
+                <span class="tab-hint">Пример: если вы хотите, чтобы ответы AI появлялись быстрее, уменьшите минимальный и максимальный интервал автопечати.</span>
+              </div>
+              <div class="form-group">
+                <label for="minTypingDelay">Минимальный интервал автопечати (мс):</label>
+                <input type="number" id="minTypingDelay" min="1" max="10000" step="1" value="60">
+                <div class="hint">Чем меньше значение, тем быстрее будет имитироваться печать. Рекомендуется 30–200 мс.</div>
+              </div>
+              <div class="form-group">
+                <label for="maxTypingDelay">Максимальный интервал автопечати (мс):</label>
+                <input type="number" id="maxTypingDelay" min="1" max="10000" step="1" value="120">
+                <div class="hint">Интервал между символами выбирается случайно в диапазоне от минимального до максимального.</div>
+              </div>
+              <div class="form-group">
+                <span class="hint">Горячие клавиши можно назначить на странице <a href="chrome://extensions/shortcuts" target="_blank">chrome://extensions/shortcuts</a>.</span>
+              </div>
+              <div class="form-group" id="api-provider-group">
+                <label for="api_provider">Провайдер API:</label>
+                <select id="api_provider">
+                  <option value="aimlapi">AIMLAPI</option>
+                  <option value="openrouter">OpenRouter</option>
+                </select>
+                <div class="hint">Выберите, через какой сервис отправлять запросы к AI.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="tab-content" id="tab-aimlapi">
+          <div class="card card-yellow">
+            <div class="card-icon">🧠</div>
+            <div class="card-content">
+              <div class="tab-desc">
+                <b>Интеграция с AIMLAPI</b><br>
+                Введите ваш API-ключ и, при необходимости, укажите модель для работы с сервисом AIMLAPI.<br>
+                <span class="tab-hint">Подсказка: получить ключ можно на <a href="https://aimlapi.com" target="_blank">aimlapi.com</a> после регистрации. Пример модели: <code>google/gemma-3-27b-it</code>.</span>
+              </div>
+              <div class="form-group">
+                <label for="apiKey">API Key:</label>
+                <div class="api-key-container">
+                  <input type="password" id="apiKey" placeholder="Введите ваш API ключ">
+                  <button type="button" class="toggle-password" id="togglePassword" title="Показать/скрыть API ключ">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  </button>
+                </div>
+                <div class="hint">Получить ключ можно на <a href="https://aimlapi.com" target="_blank">AIMLAPI.com</a> после регистрации.</div>
+              </div>
+              <div class="form-group">
+                <label for="aimlapi_model">Модель AIMLAPI:</label>
+                <input type="text" id="aimlapi_model" placeholder="google/gemma-3-27b-it">
+                <div class="hint">Укажите имя модели (например, <b>google/gemma-3-27b-it</b>). Если оставить пустым — будет использоваться модель по умолчанию.<br>Список моделей смотрите на <a href="https://aimlapi.com/models" target="_blank">странице моделей</a>.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="tab-content" id="tab-prompts">
+          <div class="card card-green">
+            <div class="card-icon">📝</div>
+            <div class="card-content">
+              <div class="tab-desc">
+                <b>Промпты (шаблоны запросов)</b><br>
+                Настройте свои шаблоны для быстрого взаимодействия с AI. Вы можете задать название и текст для каждого промпта.<br>
+                <span class="tab-hint">Пример: "Сделай краткое резюме выделенного текста" или "Объясни подробно, как работает этот код". Используйте эмодзи для наглядности!</span>
+              </div>
+              <div class="form-group">
+                <label for="prompt1Title">Название промпта 1:</label>
+                <input type="text" id="prompt1Title" placeholder="Например: Кратко 🟢">
+                <div class="hint">Это имя будет видно в меню и при выборе горячей клавиши.</div>
+              </div>
+              <div class="form-group">
+                <label for="prompt1">Промпт 1:</label>
+                <input type="text" id="prompt1" placeholder="Текст промпта 1">
+                <div class="hint">Например: "Сделай краткое резюме выделенного текста".</div>
+              </div>
+              <div class="form-group">
+                <label for="prompt2Title">Название промпта 2:</label>
+                <input type="text" id="prompt2Title" placeholder="Например: Подробно 🔵">
+                <div class="hint">Можно использовать эмодзи для наглядности.</div>
+              </div>
+              <div class="form-group">
+                <label for="prompt2">Промпт 2:</label>
+                <input type="text" id="prompt2" placeholder="Текст промпта 2">
+                <div class="hint">Например: "Объясни подробно, как работает этот код".</div>
+              </div>
+              <div class="form-group">
+                <label for="prompt3Title">Название промпта 3:</label>
+                <input type="text" id="prompt3Title" placeholder="Например: Код 🟣">
+                <div class="hint">Используйте короткие и понятные названия.</div>
+              </div>
+              <div class="form-group">
+                <label for="prompt3">Промпт 3:</label>
+                <input type="text" id="prompt3" placeholder="Текст промпта 3">
+                <div class="hint">Например: "Исправь ошибки в коде и объясни их".</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="tab-content" id="tab-openrouter">
+          <div class="card card-red">
+            <div class="card-icon">🌐</div>
+            <div class="card-content">
+              <div class="tab-desc">
+                <b>Интеграция с OpenRouter</b><br>
+                Введите ваш API-ключ и, при необходимости, укажите модель для работы с сервисом OpenRouter.<br>
+                <span class="tab-hint">Подсказка: получить ключ можно на <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai</a>. Пример модели: <code>google/gemini-2.5-pro-exp-03-25</code>.</span>
+              </div>
+              <div class="form-group">
+                <label for="openrouter_apiKey">API Key:</label>
+                <div class="api-key-container">
+                  <input type="password" id="openrouter_apiKey" placeholder="Введите ваш OpenRouter API ключ">
+                  <button type="button" class="toggle-password" id="toggleOpenRouterPassword" title="Показать/скрыть API ключ">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  </button>
+                </div>
+                <div class="hint">Получить ключ можно на <a href="https://openrouter.ai/keys" target="_blank">OpenRouter.ai</a> после регистрации.</div>
+              </div>
+              <div class="form-group">
+                <label for="openrouter_model">Модель OpenRouter:</label>
+                <input type="text" id="openrouter_model" placeholder="google/gemini-2.5-pro-exp-03-25">
+                <div class="hint">Укажите имя модели (например, <b>google/gemini-2.5-pro-exp-03-25</b>). Если оставить пустым — будет использоваться модель по умолчанию.<br>Список моделей смотрите на <a href="https://openrouter.ai/models" target="_blank">странице моделей</a>.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="form-footer">
+        <div id="status"></div>
+        <button class="save-button" id="saveButton">Сохранить настройки</button>
+      </div>
+    </form>
+    <div class="donate-block">
+      <div class="donate-header">
+        <h3>❤️ Поддержать автора</h3>
+        <p>Если вам нравится PomPom, вы можете поблагодарить автора, отправив донат. Это помогает развивать проект!</p>
+      </div>
+      <div class="donate-options">
+        <div class="donate-option-card">
+          <div class="crypto-info">
+            <span class="crypto-icon">💎</span>
+            <span class="crypto-name">Toncoin (TON)</span>
+          </div>
+          <div class="address-bar">
+            <code class="crypto-address" id="ton-address">UQB2pUhI3rUKiy-hR3mHMAcXvQ4_QNVGDEuFZcRU9qa7MMeA</code>
+            <button type="button" class="copy-btn-small" onclick="copyToClipboard('ton-address')">Копировать</button>
+          </div>
+        </div>
+        <div class="donate-option-card">
+          <div class="crypto-info">
+            <span class="crypto-icon">🪙</span>
+            <span class="crypto-name">Bitcoin (BTC)</span>
+          </div>
+          <div class="address-bar">
+            <code class="crypto-address" id="btc-address">19i9JauVSyDzv9KNDKV1Da9v36GwiZ6at3</code>
+            <button type="button" class="copy-btn-small" onclick="copyToClipboard('btc-address')">Копировать</button>
+          </div>
+        </div>
+      </div>
+      <div class="hint">⭐ Также вы можете поставить звезду на <a href="https://github.com/mrKamanov/pompom" target="_blank">GitHub</a>!</div>
+    </div>
+  </main>
+  </div>
+  <script src="options.js"></script>
+  <script src="donations.js"></script>
+</body>
+</html> 
