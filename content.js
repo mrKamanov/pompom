@@ -310,14 +310,43 @@ let typingStartTimeout = null;
 
 let chatHistory = [];
 
-function addMessageToChat(message, isUser = false) {
-    const chatHistory = document.querySelector('.pompom-chat-history');
+function addMessageToChat(message, isUser = false, addToHistory = true) {
+    const chatHistoryElement = document.querySelector('.pompom-chat-history');
     const messageElement = document.createElement('div');
     messageElement.classList.add('pompom-message');
     messageElement.classList.add(isUser ? 'user' : 'assistant');
     messageElement.innerHTML = formatApiResponse(message);
-    chatHistory.appendChild(messageElement);
-    chatHistory.scrollTop = chatHistory.scrollHeight;
+    chatHistoryElement.appendChild(messageElement);
+    chatHistoryElement.scrollTop = chatHistoryElement.scrollHeight;
+
+    if (addToHistory) {
+        chatHistory.push({
+            role: isUser ? 'user' : 'assistant',
+            content: message
+        });
+    }
+}
+
+function restoreChatHistory() {
+    const chatHistoryElement = document.querySelector('.pompom-chat-history');
+    console.log('Восстанавливаем историю чата:', {
+        elementFound: !!chatHistoryElement,
+        historyLength: chatHistory.length,
+        history: chatHistory
+    });
+    
+    if (chatHistoryElement && chatHistory.length > 0) {
+        chatHistoryElement.innerHTML = '';
+        chatHistory.forEach(msg => {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('pompom-message');
+            messageElement.classList.add(msg.role);
+            messageElement.innerHTML = formatApiResponse(msg.content);
+            chatHistoryElement.appendChild(messageElement);
+        });
+        chatHistoryElement.scrollTop = chatHistoryElement.scrollHeight;
+        console.log('История чата восстановлена');
+    }
 }
 
 function setupChatInput(popup) {
@@ -329,10 +358,9 @@ function setupChatInput(popup) {
         if (!message) return;
 
         
-        addMessageToChat(message, true);
+        addMessageToChat(message, true, true);
         input.value = '';
 
-        
         chrome.runtime.sendMessage({
             action: 'chatMessage',
             message: message,
@@ -352,18 +380,93 @@ function setupChatInput(popup) {
     });
 }
 
-function showResult(result) {
-    const popup = createPopup();
-    makeDraggable(popup);
-    setupOpacityControl(popup);
-    setupChatInput(popup);
+function showResult(result, isNewConversation = false) {
+    console.log(`showResult вызван. Новая беседа: ${isNewConversation}`);
 
+    let popup = document.querySelector('.pompom-popup-container');
+
+    if (isNewConversation) {
+        console.log("Новая сессия чата, очищаем историю.");
+        chatHistory = [];
+        if (popup) {
+            const chatHistoryElement = popup.querySelector('.pompom-chat-history');
+            if (chatHistoryElement) chatHistoryElement.innerHTML = '';
+        }
+    }
     
-    addMessageToChat(result);
-    chatHistory.push({
-        role: 'assistant',
-        content: result
-    });
+    
+    currentTypingState = 'idle';
+    
+    if (popup) {
+        console.log('Используем существующее popup окно');
+        if (typingStartTimeout) {
+            clearTimeout(typingStartTimeout);
+            typingStartTimeout = null;
+        }
+        window.postMessage({ type: 'POMPOM_RESET_TYPING' }, '*');
+    } else {
+        console.log('Создаем новое popup окно');
+        popup = createPopup();
+        makeDraggable(popup);
+        setupOpacityControl(popup);
+        setupChatInput(popup);
+        
+        const closeButton = popup.querySelector('.pompom-popup-close');
+        closeButton.addEventListener('click', () => {
+            popup.remove();
+
+            window.postMessage({ type: 'POMPOM_RESET_TYPING' }, '*');
+            
+            
+            lastApiResult = null;
+            currentTypingState = 'idle';
+            if(typingStartTimeout) {
+                clearTimeout(typingStartTimeout);
+                typingStartTimeout = null;
+            }
+
+            
+            chatHistory = [];
+            
+            console.log('Popup окно закрыто. Автопечать остановлена, история чата очищена.');
+        });
+
+        const copyButton = popup.querySelector('.pompom-copy-button');
+        const typeButton = popup.querySelector('.pompom-type-button');
+        
+        updateTypeButton(typeButton, 'idle');
+        setupTypeButton(typeButton);
+        
+        copyButton.addEventListener('click', async () => {
+            try {
+                const messageContent = copyButton.closest('.pompom-popup-container').querySelector('.pompom-message.assistant:last-child').innerText;
+                await navigator.clipboard.writeText(cleanCodeBlockMarkers(messageContent));
+                
+                
+                lastApiResult = cleanCodeBlockMarkers(messageContent);
+                
+                copyButton.classList.add('copied');
+                setTimeout(() => copyButton.classList.remove('copied'), 1000);
+                console.log("Результат скопирован и сохранен как lastApiResult");
+            } catch (err) {
+                console.error('Ошибка при копировании:', err);
+            }
+        });
+    }
+    
+    
+    addMessageToChat(result, false, false); 
+    
+    
+    if (isNewConversation) {
+        chatHistory.push({
+            role: 'assistant',
+            content: result
+        });
+        lastApiResult = cleanCodeBlockMarkers(result); 
+    }
+
+    console.log('Результат показан. Длина истории:', chatHistory.length);
 }
 
 function setupTypeButton(typeButton) {
@@ -419,93 +522,15 @@ function setupTypeButton(typeButton) {
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    console.log("Получено сообщение в content.js:", message);
+
     if (message.action === "showResult") {
-        console.log('Получено сообщение showResult:', message);
-
-        lastApiResult = cleanCodeBlockMarkers(message.result);
-        currentTypingState = 'idle'; 
-
-        const existingPopup = document.querySelector('.pompom-popup-container');
-        if (existingPopup) {
-            existingPopup.remove();
-            
-            if (typingStartTimeout) {
-                clearTimeout(typingStartTimeout);
-                typingStartTimeout = null;
-            }
-            window.postMessage({ type: 'POMPOM_RESET_TYPING' }, '*'); 
-        }
-
-        const popup = createPopup();
-        console.log('Создано новое окно:', popup);
-
-        makeDraggable(popup);
-        setupOpacityControl(popup);
-        setupChatInput(popup);
-
-        const closeButton = popup.querySelector('.pompom-popup-close');
-        closeButton.addEventListener('click', () => {
-            popup.remove();
-            
-            if (typingStartTimeout) {
-                clearTimeout(typingStartTimeout);
-                typingStartTimeout = null;
-            }
-            window.postMessage({ type: 'POMPOM_RESET_TYPING' }, '*');
-        });
-
-        const copyButton = popup.querySelector('.pompom-copy-button');
-        const typeButton = popup.querySelector('.pompom-type-button');
-        const content = popup.querySelector('.pompom-popup-content');
-
-        
-        addMessageToChat(message.result);
-        chatHistory.push({
-            role: 'assistant',
-            content: message.result
-        });
-
-        updateTypeButton(typeButton, 'idle');
-        setupTypeButton(typeButton);
-
-        copyButton.addEventListener('click', async () => {
-            try {
-                await navigator.clipboard.writeText(lastApiResult); 
-                copyButton.classList.add('copied');
-                setTimeout(() => {
-                    copyButton.classList.remove('copied');
-                }, 1000);
-            } catch (err) {
-                console.error('Ошибка при копировании:', err);
-            }
-        });
-
-        console.log('Окно добавлено на страницу:', document.body.contains(popup));
-        console.log('Стили окна:', window.getComputedStyle(popup));
+        showResult(message.result, true); 
     } else if (message.action === 'chatResponse') {
-        
-        lastApiResult = cleanCodeBlockMarkers(message.result);
-        currentTypingState = 'idle';
-        
-        
-        addMessageToChat(message.result);
-        chatHistory.push({
-            role: 'assistant',
-            content: message.result
-        });
-
-        
-        const typeButton = document.querySelector('.pompom-type-button');
-        if (typeButton) {
-            updateTypeButton(typeButton, 'idle');
-            
-            const newTypeButton = typeButton.cloneNode(true);
-            typeButton.parentNode.replaceChild(newTypeButton, typeButton);
-            
-            setupTypeButton(newTypeButton);
-        }
+        showResult(message.result, false);
     } else if (message.action === 'startAutoPrint') {
         if (lastApiResult) {
+            console.log("Запуск автопечати по горячей клавише...");
             if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
                 chrome.storage.sync.get(['minTypingDelay', 'maxTypingDelay'], (result) => {
                     window.postMessage({
@@ -522,8 +547,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 }, '*');
             }
         } else {
-            alert('Нет текста для автопечати. Сначала получите ответ от AI.');
+            console.warn("Нечего печатать для автопечати.");
+            alert("Нет текста для автопечати. Сначала получите ответ от AI.");
         }
+    } else if (message.action === "startSelection") {
+        startScreenshotSelectionMode();
+    } else if (message.action === "hideOverlay") {
+        if (screenshotOverlay) screenshotOverlay.style.display = 'none';
+        if (screenshotSelectionArea) screenshotSelectionArea.style.display = 'none';
+    } else if (message.action === "getSelectedText") {
+        const selection = window.getSelection();
+        const text = selection.toString().trim();
+        console.log('Content.js: выделенный текст:', text);
+        sendResponse({ text: text });
+        return true; 
     }
 });
 
@@ -542,3 +579,306 @@ window.addEventListener('message', (event) => {
         }
     }
 });
+
+
+window.addEventListener('beforeunload', () => {
+    if (typingStartTimeout) {
+        clearTimeout(typingStartTimeout);
+        typingStartTimeout = null;
+    }
+    window.postMessage({ type: 'POMPOM_RESET_TYPING' }, '*');
+    
+    
+    chatHistory = [];
+    console.log('Content.js: Страница закрывается, история чата очищена');
+    console.log('Content.js: Страница закрывается, состояния очищены');
+});
+
+
+window.addEventListener('pagehide', () => {
+    chatHistory = [];
+    console.log('Content.js: Переход на другую страницу, история чата очищена');
+});
+
+
+
+
+let screenshotIsSelecting = false;
+let screenshotStartX, screenshotStartY;
+let screenshotCurrentRect = { x: 0, y: 0, width: 0, height: 0 };
+
+let screenshotOverlay = document.getElementById('screenshot-overlay');
+let screenshotSelectionArea = document.getElementById('screenshot-selection-area');
+let screenshotControls = document.getElementById('screenshot-controls');
+let screenshotCaptureBtn, screenshotCancelBtn;
+
+
+function createScreenshotElements() {
+    if (!screenshotOverlay) {
+        screenshotOverlay = document.createElement('div');
+        screenshotOverlay.id = 'screenshot-overlay';
+        document.body.appendChild(screenshotOverlay);
+
+        screenshotSelectionArea = document.createElement('div');
+        screenshotSelectionArea.id = 'screenshot-selection-area';
+        document.body.appendChild(screenshotSelectionArea);
+
+        
+        screenshotControls = document.createElement('div');
+        screenshotControls.id = 'screenshot-controls';
+        screenshotControls.innerHTML = `
+            <button id="screenshot-capture-btn">Сделать скриншот</button>
+            <button id="screenshot-recognize-btn">Распознать и обработать</button>
+            <button id="screenshot-cancel-btn">Отмена</button>
+        `;
+        document.body.appendChild(screenshotControls);
+
+        screenshotCaptureBtn = document.getElementById('screenshot-capture-btn');
+        screenshotCancelBtn = document.getElementById('screenshot-cancel-btn');
+        const recognizeBtn = document.getElementById('screenshot-recognize-btn');
+
+        
+        screenshotOverlay.addEventListener('mousedown', handleScreenshotMouseDown);
+        screenshotOverlay.addEventListener('mousemove', handleScreenshotMouseMove);
+        screenshotOverlay.addEventListener('mouseup', handleScreenshotMouseUp);
+        screenshotOverlay.addEventListener('mouseleave', handleScreenshotMouseLeave);
+
+        screenshotCaptureBtn.addEventListener('click', handleScreenshotCapture);
+        screenshotCancelBtn.addEventListener('click', handleScreenshotCancel);
+        recognizeBtn.addEventListener('click', handleScreenshotRecognize);
+    }
+}
+
+function startScreenshotSelectionMode() {
+    createScreenshotElements();
+    screenshotOverlay.style.display = 'block';
+    screenshotSelectionArea.style.display = 'none';
+    screenshotControls.style.display = 'none';
+    document.body.classList.add('screenshot-selecting');
+    screenshotIsSelecting = false;
+}
+
+function resetScreenshotSelection() {
+    screenshotIsSelecting = false;
+    screenshotCurrentRect = { x: 0, y: 0, width: 0, height: 0 };
+    if (screenshotOverlay) screenshotOverlay.style.display = 'none';
+    if (screenshotSelectionArea) screenshotSelectionArea.style.display = 'none';
+    if (screenshotControls) screenshotControls.style.display = 'none';
+    document.body.classList.remove('screenshot-selecting');
+    
+    
+    const recognizeBtn = document.getElementById('screenshot-recognize-btn');
+    if (recognizeBtn) {
+        recognizeBtn.textContent = 'Распознать и обработать';
+        recognizeBtn.disabled = false;
+    }
+}
+
+function handleScreenshotMouseDown(e) {
+    e.preventDefault();
+    screenshotIsSelecting = true;
+    screenshotStartX = e.clientX;
+    screenshotStartY = e.clientY;
+
+    screenshotSelectionArea.style.left = screenshotStartX + 'px';
+    screenshotSelectionArea.style.top = screenshotStartY + 'px';
+    screenshotSelectionArea.style.width = '0px';
+    screenshotSelectionArea.style.height = '0px';
+    screenshotSelectionArea.style.display = 'block';
+    screenshotControls.style.display = 'none';
+}
+
+function handleScreenshotMouseMove(e) {
+    if (!screenshotIsSelecting) return;
+
+    const currentX = e.clientX;
+    const currentY = e.clientY;
+
+    const width = Math.abs(currentX - screenshotStartX);
+    const height = Math.abs(currentY - screenshotStartY);
+    const left = Math.min(screenshotStartX, currentX);
+    const top = Math.min(screenshotStartY, currentY);
+
+    screenshotSelectionArea.style.left = left + 'px';
+    screenshotSelectionArea.style.top = top + 'px';
+    screenshotSelectionArea.style.width = width + 'px';
+    screenshotSelectionArea.style.height = height + 'px';
+
+    screenshotCurrentRect = { x: left, y: top, width: width, height: height };
+}
+
+function handleScreenshotMouseUp() {
+    if (screenshotIsSelecting) {
+        screenshotIsSelecting = false;
+        if (screenshotCurrentRect.width > 0 && screenshotCurrentRect.height > 0) {
+            screenshotControls.style.display = 'block';
+
+            const controlsWidth = screenshotControls.offsetWidth;
+            const controlsHeight = screenshotControls.offsetHeight;
+
+            
+            let top = screenshotCurrentRect.y + screenshotCurrentRect.height + 10;
+            let left = screenshotCurrentRect.x + (screenshotCurrentRect.width / 2) - (controlsWidth / 2);
+
+            
+            if (left < 10) {
+                left = 10;
+            }
+            if (left + controlsWidth > window.innerWidth - 10) {
+                left = window.innerWidth - 10 - controlsWidth;
+            }
+            if (top + controlsHeight > window.innerHeight - 10) {
+                
+                top = screenshotCurrentRect.y - controlsHeight - 10;
+            }
+            if (top < 10) {
+                
+                top = 10;
+            }
+
+            screenshotControls.style.top = top + 'px';
+            screenshotControls.style.left = left + 'px';
+
+        } else {
+            screenshotControls.style.display = 'none';
+        }
+    }
+}
+
+function handleScreenshotMouseLeave() {
+    if (screenshotIsSelecting) {
+        handleScreenshotMouseUp();
+    }
+}
+
+function handleScreenshotCapture() {
+    if (screenshotCurrentRect.width > 0 && screenshotCurrentRect.height > 0) {
+        console.log("Отправка координат области для скриншота:", screenshotCurrentRect);
+        chrome.runtime.sendMessage({ action: "areaSelected", rect: screenshotCurrentRect }, (response) => {
+            console.log("Получен ответ от background.js:", response);
+            if (response && response.success) {
+                console.log("Скриншот успешно сделан и сохранен.");
+            } else {
+                console.error("Ошибка при выполнении скриншота:", response ? response.error : "Неизвестная ошибка.");
+            }
+            resetScreenshotSelection();
+        });
+    } else {
+        console.warn("Область для скриншота не выбрана или слишком мала.");
+        resetScreenshotSelection();
+    }
+}
+
+function handleScreenshotCancel() {
+    resetScreenshotSelection();
+}
+
+function handleScreenshotRecognize() {
+    if (screenshotCurrentRect.width > 0 && screenshotCurrentRect.height > 0) {
+        const recognizeBtn = document.getElementById('screenshot-recognize-btn');
+        if(recognizeBtn) {
+            recognizeBtn.textContent = 'Обработка...';
+            recognizeBtn.disabled = true;
+        }
+
+        
+        chrome.runtime.sendMessage({ 
+            action: "recognizeText", 
+            rect: screenshotCurrentRect 
+        }, async (response) => {
+            if (!response || !response.success || !response.dataUrl) {
+                alert("Не удалось сделать скриншот области. Ошибка: " + (response ? response.error : "Неизвестная ошибка."));
+                resetScreenshotSelection();
+                return;
+            }
+            
+            
+            try {
+                if (typeof window.easyOCRRecognize !== 'function') {
+                     throw new Error("Функция распознавания easyOCRRecognize не найдена.");
+                }
+                const recognizedText = await window.easyOCRRecognize(response.dataUrl);
+                
+                
+                const processResponse = await processRecognizedText(recognizedText);
+
+                if (processResponse && processResponse.success) {
+                    showResult(processResponse.result, true); 
+                } else {
+                    alert("Ошибка обработки текста: " + (processResponse ? processResponse.error : "Неизвестная ошибка"));
+                }
+
+            } catch (error) {
+                console.error("Ошибка в цепочке распознавания:", error);
+                alert("Ошибка: " + error.message);
+            } finally {
+                resetScreenshotSelection();
+            }
+        });
+    } else {
+        console.warn("Область для скриншота не выбрана или слишком мала.");
+        resetScreenshotSelection();
+    }
+}
+
+async function performOCRWithEasyOCR(imageDataUrl) {
+    try {
+        
+        const result = await window.easyOCRRecognize(imageDataUrl, ["en", "ru"]);
+        
+        if (result && result.data && result.data.length > 0) {
+            const recognizedText = window.extractTextFromResult(result);
+            
+            if (recognizedText.trim()) {
+                console.log('Распознанный текст:', recognizedText);
+                
+                
+                await processRecognizedText(recognizedText);
+            } else {
+                alert("Текст не найден на изображении.");
+            }
+        } else {
+            alert("Не удалось распознать текст.");
+        }
+    } catch (error) {
+        console.error("Ошибка распознавания:", error);
+        alert("Не удалось распознать текст. Ошибка: " + error.message);
+    } finally {
+        resetScreenshotSelection();
+    }
+}
+
+async function processRecognizedText(recognizedText) {
+    if (!recognizedText || recognizedText.trim() === '') {
+        alert("Не удалось распознать текст или область пуста.");
+        return { success: false, error: "Распознанный текст пуст." };
+    }
+
+    console.log("Отправляем распознанный текст в фоновый скрипт для обработки...");
+
+    return new Promise((resolve) => {
+        try {
+            chrome.runtime.sendMessage({
+                action: 'processRecognizedText',
+                text: recognizedText
+            }, (response) => {
+                if (chrome.runtime.lastError) {
+                    console.error("Ошибка при отправке сообщения:", chrome.runtime.lastError.message);
+                    resolve({ success: false, error: chrome.runtime.lastError.message });
+                    return;
+                }
+                
+                if (response && response.success) {
+                    console.log('Получен успешный ответ от API:', response.result);
+                    resolve({ success: true, result: response.result });
+                } else {
+                    console.error('API вернуло ошибку:', response ? response.error : 'Неизвестная ошибка');
+                    resolve({ success: false, error: response ? response.error : 'Неизвестная ошибка' });
+                }
+            });
+        } catch (error) {
+            console.error("Критическая ошибка при отправке текста в API:", error);
+            resolve({ success: false, error: error.message });
+        }
+    });
+}

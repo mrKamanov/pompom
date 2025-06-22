@@ -1,13 +1,14 @@
 {
   "manifest_version": 3,
   "name": "PomPom",
-  "version": "1.13",
-  "description": "Расширение для обработки текста через API",
+  "version": "1.0",
+  "description": "AI-powered browser extension",
   "permissions": [
-    "contextMenus",
+    "activeTab",
     "storage",
-    "scripting",
-    "activeTab"
+    "contextMenus",
+    "downloads",
+    "tabs"
   ],
   "host_permissions": [
     "https://api.aimlapi.com/*",
@@ -24,7 +25,7 @@
         "lib/highlight.min.js",
         "lib/languages/sql.min.js",         
         "lib/languages/javascript.min.js",  
-        
+        "easyOCR.js",
         "content.js"
       ],
       "css": [
@@ -43,6 +44,7 @@
       "resources": [
         "inject.js", 
         "options/donations.js",
+        "easyOCR.js",
         "lib/*.js",         
         "lib/styles/*.css"  
       ],

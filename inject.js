@@ -296,30 +296,43 @@ function startTyping(text, startIndex = 0, customMinDelay, customMaxDelay) {
 }
 
 
-function pauseTyping(reasonState = TYPING_STATE.PAUSED) {
+function pauseTyping() {
+    console.log('Inject.js: Запрошена пауза печати.');
     if (typingTimeoutId) {
         clearTimeout(typingTimeoutId);
         typingTimeoutId = null;
     }
     isTypingInProgress = false; 
-    
-    sendTypingState(reasonState);
-    console.log('Inject.js: Печать приостановлена.');
+    sendTypingState(TYPING_STATE.PAUSED);
 }
 
 
 function resetTyping() {
+    console.log('Inject.js: Запрошен полный сброс состояния печати...');
+
+    // 1. Немедленно останавливаем любой запланированный вызов
     if (typingTimeoutId) {
         clearTimeout(typingTimeoutId);
         typingTimeoutId = null;
+        console.log('Inject.js: Таймер печати остановлен.');
     }
-    typingText = '';
-    currentIndex = 0;
-    activeElement = null;
+
+    // 2. Сбрасываем все флаги состояния
     isTypingRequested = false;
     isTypingInProgress = false;
+    
+    // 3. Сбрасываем текст и счетчики
+    typingText = '';
+    currentIndex = 0;
+    
+    // 4. Сбрасываем состояние опечаток
+    typoState = null;
+    typoCount = 0;
+    typoPositions = [];
+
+    // 5. Сообщаем интерфейсу, что все остановлено
     sendTypingState(TYPING_STATE.IDLE);
-    console.log('Inject.js: Состояние печати сброшено до IDLE.');
+    console.log('Inject.js: Состояние печати полностью сброшено до IDLE.');
 }
 
 
@@ -333,12 +346,12 @@ document.addEventListener('focusin', (event) => {
         } else if (isTypingRequested && isTypingInProgress) {
             
             console.log('Inject.js: Фокус перешел на другое поле ввода. Пауза печати.');
-            pauseTyping(TYPING_STATE.PAUSED);
+            pauseTyping();
         }
     } else if (isTypingRequested && isTypingInProgress) {
         
         console.log('Inject.js: Фокус потерян с элемента ввода на не-ввод. Пауза печати.');
-        pauseTyping(TYPING_STATE.PAUSED);
+        pauseTyping();
     }
 });
 
@@ -347,7 +360,7 @@ document.addEventListener('blur', (event) => {
     
     if (isTypingInProgress && activeElement && (!event.relatedTarget || !isInputTarget(event.relatedTarget))) {
         console.log('Inject.js: Элемент потерял фокус. Пауза печати.');
-        pauseTyping(TYPING_STATE.PAUSED);
+        pauseTyping();
     }
 }, true); 
 
@@ -398,7 +411,7 @@ window.addEventListener('message', (event) => {
             break;
         case 'POMPOM_PAUSE_TYPING':
             console.log('Inject.js: Получена команда PAUSE_TYPING.');
-            pauseTyping(TYPING_STATE.PAUSED);
+            pauseTyping();
             break;
         case 'POMPOM_RESET_TYPING':
             console.log('Inject.js: Получена команда RESET_TYPING.');

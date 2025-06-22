@@ -3,62 +3,51 @@
 // https://openrouter.ai/docs
 
 /**
- * Отправка запроса к OpenRouter API
- * @param {string} prompt - Текст запроса
- * @param {string} apiKey - Ключ OpenRouter API
- * @param {object} options - Дополнительные параметры (например, model)
+ * Отправляет запрос к OpenRouter API
+ * @param {Array<Object>} messages - Массив сообщений для отправки
+ * @param {string} apiKey - Ключ API
+ * @param {Object} options - Опции, включая модель
  * @returns {Promise<string>} - Ответ AI
  */
-async function sendToOpenRouter(prompt, apiKey, options = {}) {
-    const endpoint = 'https://openrouter.ai/api/v1/chat/completions';
-    const model = options.model || 'google/gemma-3-27b-it:free';
+async function sendToOpenRouter(messages, apiKey, options) {
+    const { model } = options;
 
-    if (typeof prompt !== 'string') {
-        throw new Error('Prompt должен быть строкой!');
+    if (!apiKey) {
+        throw new Error("OpenRouter API key is not set.");
     }
-    const requestBody = {
-        model,
-        messages: [
-            {
-                role: 'user',
-                content: prompt
-            }
-        ]
+
+    if (!model) {
+        throw new Error("OpenRouter model is not specified.");
+    }
+
+    const body = {
+        model: model,
+        messages: messages, 
+        stream: false, 
     };
-    const body = JSON.stringify(requestBody);
-    console.log('[OpenRouter] Итоговый requestBody:', requestBody);
 
-    console.log('[OpenRouter] Endpoint:', endpoint);
-    console.log('[OpenRouter] Request headers:', {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-    });
-    console.log('[OpenRouter] Request body:', body);
-
-    const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
-        },
-        body
-    });
-
-    const responseText = await response.text();
-    console.log('[OpenRouter] Response status:', response.status);
-    console.log('[OpenRouter] Response text:', responseText);
-    if (!response.ok) {
-        throw new Error(`OpenRouter API error: ${response.status} ${response.statusText}`);
-    }
-    let data;
     try {
-        data = JSON.parse(responseText);
-    } catch (e) {
-        throw new Error(`Ошибка при разборе ответа от OpenRouter: ${e.message}`);
-    }
-    
-    return data.choices?.[0]?.message?.content || '';
-}
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(body)
+        });
 
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(`OpenRouter API error (status ${response.status}): ${errorData.error.message}`);
+        }
+
+        const data = await response.json();
+        return data.choices[0].message.content;
+
+    } catch (error) {
+        console.error("Error sending request to OpenRouter:", error);
+        throw error;
+    }
+}
 
 export { sendToOpenRouter }; 

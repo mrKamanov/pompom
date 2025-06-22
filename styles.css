@@ -403,9 +403,9 @@
     border-color: #f3e9c7;
 }
 
-/* === PomPom Options: Красивые кнопки и анимации === */
 
-/* Иконки криптовалют */
+
+
 .crypto-icon {
   width: 24px;
   height: 24px;
@@ -413,7 +413,6 @@
   margin-right: 4px;
 }
 
-/* Общий фон и плавность */
 :root {
   --brand-main: #6c47ff;
   --brand-accent: #ffb300;
@@ -423,4 +422,92 @@
   --brand-border: #e0d7fa;
   --brand-text: #23213a;
   --brand-muted: #888;
+}
+
+
+
+#screenshot-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 2147483647;
+    cursor: crosshair;
+    display: none;
+}
+
+#screenshot-selection-area {
+    position: absolute;
+    border: 2px dashed rgba(255, 255, 255, 0.8); 
+    background-color: rgba(108, 71, 255, 0.2); 
+    pointer-events: none; 
+    display: none; 
+}
+
+#screenshot-controls {
+    position: fixed;
+    background-color: rgba(30, 30, 40, 0.9); 
+    backdrop-filter: blur(8px); 
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 12px;
+    border-radius: 12px; 
+    z-index: 2147483647;
+    display: flex; 
+    gap: 10px; 
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+#screenshot-controls button {
+    padding: 10px 20px;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    transition: all 0.2s ease;
+}
+
+#screenshot-controls button:active {
+    transform: scale(0.97); 
+}
+
+
+#screenshot-recognize-btn {
+    background-color: var(--brand-accent, #ffb300); 
+    color: #333;
+}
+
+#screenshot-recognize-btn:hover {
+    background-color: #e6a100; 
+}
+
+
+#screenshot-capture-btn {
+    background-color: var(--brand-main, #6c47ff); 
+    color: white;
+}
+
+#screenshot-capture-btn:hover {
+    background-color: #5a37e0; 
+}
+
+
+#screenshot-cancel-btn {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: #f0f0f0;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+#screenshot-cancel-btn:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+}
+
+
+body.screenshot-selecting {
+    cursor: crosshair !important;
 }
