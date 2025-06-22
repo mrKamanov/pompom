@@ -468,4 +468,23 @@ body {
   .main-title { font-size: 1.5em; }
   .settings-header { padding: 18px 16px 10px 16px; gap: 12px; }
   #optionsForm, .donate-block { margin: 0 16px; margin-top: 24px; }
+}
+
+.card.card-purple {
+  background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+  border-left: 6px solid #a18cd1;
+  color: #3a2c5a;
+}
+
+.sidebar-card.card-purple {
+  background: #a18cd1;
+  color: #fff;
+}
+.sidebar-card.card-purple.active, .sidebar-card.card-purple:hover {
+  background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+  color: #3a2c5a;
+}
+
+.tab-content#tab-ocrspace.active {
+  display: block;
 } 

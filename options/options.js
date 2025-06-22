@@ -8,7 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     'aimlapi_model',
     'api_provider',
     'openrouter_apiKey',
-    'openrouter_model'], (result) => {
+    'openrouter_model',
+    'ocrspace_apiKey'], (result) => {
     if (result.prompt1Title) document.getElementById('prompt1Title').value = result.prompt1Title;
     if (result.prompt2Title) document.getElementById('prompt2Title').value = result.prompt2Title;
     if (result.prompt3Title) document.getElementById('prompt3Title').value = result.prompt3Title;
@@ -22,9 +23,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (result.api_provider) document.getElementById('api_provider').value = result.api_provider;
     if (result.openrouter_apiKey) document.getElementById('openrouter_apiKey').value = result.openrouter_apiKey;
     if (result.openrouter_model) document.getElementById('openrouter_model').value = result.openrouter_model;
+    if (result.ocrspace_apiKey) document.getElementById('ocrspace_apiKey').value = result.ocrspace_apiKey;
   });
 
   setupApiKeyToggle();
+  setupOcrSpaceApiKeyToggle();
 
   const sidebarCards = document.querySelectorAll('.sidebar-card');
   const tabContents = document.querySelectorAll('.tab-content');
@@ -75,6 +78,22 @@ function setupApiKeyToggle() {
   }
 }
 
+function setupOcrSpaceApiKeyToggle() {
+  const ocrspaceApiKeyInput = document.getElementById('ocrspace_apiKey');
+  const toggleOcrSpaceBtn = document.getElementById('toggleOcrSpacePassword');
+  if (ocrspaceApiKeyInput && toggleOcrSpaceBtn) {
+    toggleOcrSpaceBtn.addEventListener('click', function() {
+      if (ocrspaceApiKeyInput.type === 'password') {
+        ocrspaceApiKeyInput.type = 'text';
+        toggleOcrSpaceBtn.setAttribute('aria-label', 'Скрыть API ключ');
+      } else {
+        ocrspaceApiKeyInput.type = 'password';
+        toggleOcrSpaceBtn.setAttribute('aria-label', 'Показать API ключ');
+      }
+    });
+  }
+}
+
 document.getElementById('saveButton').addEventListener('click', () => {
   const prompt1Title = document.getElementById('prompt1Title').value;
   const prompt2Title = document.getElementById('prompt2Title').value;
@@ -89,6 +108,7 @@ document.getElementById('saveButton').addEventListener('click', () => {
   const api_provider = document.getElementById('api_provider').value;
   const openrouter_apiKey = document.getElementById('openrouter_apiKey').value;
   const openrouter_model = document.getElementById('openrouter_model').value;
+  const ocrspace_apiKey = document.getElementById('ocrspace_apiKey').value;
   const status = document.getElementById('status');
 
   let apiKeyValid = true;
@@ -114,7 +134,8 @@ document.getElementById('saveButton').addEventListener('click', () => {
     aimlapi_model,
     api_provider,
     openrouter_apiKey,
-    openrouter_model
+    openrouter_model,
+    ocrspace_apiKey
   }, () => {
     status.textContent = 'Настройки сохранены';
     status.className = 'status success';

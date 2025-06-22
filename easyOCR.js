@@ -15,8 +15,22 @@ async function ocrSpaceRecognize(base64Image) {
         throw new Error('Некорректный формат base64-изображения.');
     }
 
+    // Получаем ключ из chrome.storage
+    const ocrspace_apiKey = await new Promise((resolve) => {
+        if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
+            chrome.storage.sync.get(['ocrspace_apiKey'], (result) => {
+                resolve(result.ocrspace_apiKey || '');
+            });
+        } else {
+            resolve('');
+        }
+    });
+    if (!ocrspace_apiKey) {
+        throw new Error('API-ключ OCR.Space не задан. Пожалуйста, укажите его в настройках расширения.');
+    }
+
     const formData = new FormData();
-    formData.append('apikey', 'K81724188988957'); 
+    formData.append('apikey', ocrspace_apiKey); 
     formData.append('language', 'rus'); 
     formData.append('isOverlayRequired', 'false');
     formData.append('base64Image', base64Image);
